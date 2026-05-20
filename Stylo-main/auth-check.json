@@ -1,0 +1,11 @@
+{"users": [
+{
+  "localId": "opB1E12vIcNMVqn2DAMIfT5U6rF2",
+  "email": "codex-test-delete@example.com",
+  "emailVerified": false,
+  "passwordHash": "vZ5gAAKhF69prY1oFW6NftEngUAza1ydUEe5LIZfkPdRCvXsYZa7cgJflqLZzTK7+F7KTS1518fmmcaKCpIMXw==",
+  "salt": "eL21mjyCUkNMjg==",
+  "lastSignedInAt": "1779136813262",
+  "createdAt": "1779136813262",
+  "providerUserInfo": []
+}]}

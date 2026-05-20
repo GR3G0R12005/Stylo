@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+
+    <!-- ── PWA Core ── -->
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="theme-color" content="#D4AF37" />
+
+    <!-- ── Apple / iOS PWA ── -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="STEYLOOK" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+
+    <!-- ── Favicon ── -->
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
+    <link rel="icon" type="image/png" sizes="512x512" href="/icons/icon-512.png" />
+
+    <!-- ── SEO & Description ── -->
+    <title>STEYLOOK — Tu Estilo, Tu Mundo</title>
+    <meta name="description" content="Reserva tu cita de barbería o salón fácil y rápido. Experiencia premium para clientes, barberos y saloneras." />
+    <meta name="keywords" content="barbería, salón de belleza, citas, reservas, STEYLOOK" />
+    <meta name="author" content="STEYLOOK" />
+
+    <!-- ── Open Graph (share on social) ── -->
+    <meta property="og:title" content="STEYLOOK — Tu Estilo, Tu Mundo" />
+    <meta property="og:description" content="Reserva tu cita de barbería o salón fácil y rápido." />
+    <meta property="og:image" content="/icons/icon-512.png" />
+    <meta property="og:type" content="website" />
+
+    <!-- ── Error overlay (dev) ── -->
+    <script>
+      window.onerror = function(message, source, lineno, colno, error) {
+        var el = document.createElement('div');
+        el.style.cssText = 'position:fixed;top:0;left:0;width:100%;background:red;color:white;z-index:9999;padding:20px;font-family:monospace;white-space:pre-wrap;';
+        el.innerText = 'Error: ' + message + '\n' + (error ? error.stack : '');
+        document.body.appendChild(el);
+      };
+      window.addEventListener('unhandledrejection', function(event) {
+        var el = document.createElement('div');
+        el.style.cssText = 'position:fixed;top:0;left:0;width:100%;background:darkred;color:white;z-index:9999;padding:20px;font-family:monospace;white-space:pre-wrap;';
+        el.innerText = 'Promise Error: ' + (event.reason ? event.reason.stack || event.reason : 'Unknown error');
+        document.body.appendChild(el);
+      });
+    </script>
+  </head>
+  <body style="background-color: #000; color: #fff;">
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+

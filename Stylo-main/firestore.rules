@@ -1,0 +1,125 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 1. Master Gate: Default Deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // --- Helper Functions ---
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // --- Collections ---
+
+    // User Profiles
+    match /users/{userId} {
+      function isValidUser(data) {
+        return data.nombre is string && data.nombre.size() > 0 && data.nombre.size() <= 100 &&
+               (data.get('email', '') is string) &&
+               data.tipo in ['cliente', 'barbero', 'salonera'] &&
+               (data.get('foto', '') is string) &&
+               (data.get('telefono', '') is string) &&
+               (data.get('createdAt', '') is string);
+      }
+
+      allow get: if isSignedIn() && isValidId(userId);
+      allow list: if isSignedIn();
+      
+      allow create: if isOwner(userId) && isValidId(userId) && isValidUser(incoming());
+      
+      allow update: if isOwner(userId) && isValidId(userId) && isValidUser(incoming()) &&
+                    incoming().tipo == existing().tipo &&
+                    incoming().diff(existing()).affectedKeys().hasOnly(['nombre', 'foto', 'telefono', 'shopId', 'services']);
+    }
+
+    // Shops
+    match /shops/{shopId} {
+      allow read: if true;
+      allow write: if false;
+      
+      match /services/{serviceId} {
+        allow read: if true;
+      }
+    }
+
+    // Appointments
+    match /appointments/{appointmentId} {
+      function isValidAppointment(data) {
+        return data.clientId is string &&
+               data.shopId is string && data.serviceId is string &&
+               data.status in ['pending', 'confirmed', 'cancelled', 'completed'] &&
+               data.date is string &&
+               data.price is number;
+      }
+
+      allow read: if isSignedIn() && (
+        isOwner(existing().clientId) || (existing().get('providerId', '') != '' && isOwner(existing().providerId))
+      );
+
+      allow create: if isSignedIn() && 
+                    isOwner(incoming().clientId) && 
+                    isValidAppointment(incoming()) &&
+                    incoming().status == 'pending';
+
+      allow update: if isSignedIn() && (
+        // Client can cancel their own appointment
+        (isOwner(existing().clientId) && 
+         incoming().diff(existing()).affectedKeys().hasOnly(['status']) &&
+         incoming().status == 'cancelled' &&
+         existing().status == 'pending') ||
+        
+        // Provider can confirm or complete
+        (isOwner(existing().providerId) && 
+         incoming().diff(existing()).affectedKeys().hasOnly(['status']) &&
+         incoming().status in ['confirmed', 'completed', 'cancelled'] &&
+         existing().status != 'completed')
+      );
+    }
+
+    // Reviews
+    match /reviews/{reviewId} {
+      function isValidReview(data) {
+        return data.shopId is string && data.clientId is string &&
+               data.rating is number && data.rating >= 1 && data.rating <= 5 &&
+               data.comment is string && data.comment.size() <= 1000 &&
+               data.clientName is string;
+      }
+      allow read: if true;
+      allow create: if isSignedIn() && isOwner(incoming().clientId) && isValidReview(incoming());
+      allow update: if false; // Reviews are immutable for now
+      allow delete: if isOwner(existing().clientId);
+    }
+
+    // Chats
+    match /chats/{chatId} {
+      allow read: if isSignedIn() && request.auth.uid in existing().participants;
+      allow create: if isSignedIn() && request.auth.uid in incoming().participants && incoming().participants.size() == 2;
+      allow update: if isSignedIn() && request.auth.uid in existing().participants &&
+                    incoming().diff(existing()).affectedKeys().hasOnly(['lastMessage', 'updatedAt']);
+      
+      match /messages/{messageId} {
+        allow read: if isSignedIn() && request.auth.uid in get(/databases/$(database)/documents/chats/$(chatId)).data.participants;
+        allow create: if isSignedIn() && isOwner(incoming().senderId) && 
+                      request.auth.uid in get(/databases/$(database)/documents/chats/$(chatId)).data.participants;
+      }
+    }
+  }
+}
