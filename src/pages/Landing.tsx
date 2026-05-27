@@ -32,10 +32,10 @@ export default function Landing() {
           
           <div className="hidden md:flex items-center gap-8 text-[11px] font-black tracking-widest uppercase">
             <a href="#descubrir" className="text-zinc-400 hover:text-white transition-colors">Descubrir</a>
-            <a href="#negocios" className="text-zinc-400 hover:text-white transition-colors">Soy Negocio</a>
-            <Link to="/login" className="text-zinc-400 hover:text-white transition-colors">Iniciar Sesión</Link>
-            <Link to="/role-selection" className="px-6 py-2.5 rounded-full bg-white text-black hover:scale-105 transition-transform">
-              Crear Cuenta
+            <a href="#negocios" className="text-zinc-400 hover:text-white transition-colors">Para Negocios</a>
+            <Link to="/auth/client" className="text-zinc-400 hover:text-white transition-colors">Iniciar Sesión</Link>
+            <Link to="/auth/client" className="px-6 py-2.5 rounded-full bg-white text-black hover:scale-105 transition-transform">
+              Soy Cliente
             </Link>
           </div>
 
@@ -50,9 +50,12 @@ export default function Landing() {
         <div className="fixed top-20 left-0 w-full bg-black/95 backdrop-blur-3xl border-b border-white/10 z-40 p-6 flex flex-col gap-6 text-sm font-bold uppercase tracking-widest text-center">
           <a href="#descubrir" onClick={() => setMenuOpen(false)}>Descubrir</a>
           <a href="#negocios" onClick={() => setMenuOpen(false)}>Para Negocios</a>
-          <Link to="/login" onClick={() => setMenuOpen(false)}>Iniciar Sesión</Link>
-          <Link to="/role-selection" onClick={() => setMenuOpen(false)} className="py-3 bg-white text-black rounded-full">
-            Crear Cuenta
+          <Link to="/auth/client" onClick={() => setMenuOpen(false)}>Iniciar Sesión</Link>
+          <Link to="/auth/client" onClick={() => setMenuOpen(false)} className="py-3 bg-blue-500 text-white rounded-full">
+            Soy Cliente
+          </Link>
+          <Link to="/business-selection" onClick={() => setMenuOpen(false)} className="py-3 bg-amber-500 text-black rounded-full">
+            Soy Negocio
           </Link>
         </div>
       )}
@@ -86,30 +89,14 @@ export default function Landing() {
         
         <motion.div 
           initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.3 }}
-          className="w-full max-w-2xl relative"
+          className="flex flex-col sm:flex-row gap-4 w-full max-w-2xl"
         >
-          <div className="flex flex-col sm:flex-row p-2 bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl gap-2 shadow-2xl focus-within:border-barber-gold/50 transition-colors">
-            <div className="flex-1 flex items-center gap-3 px-4 py-3">
-              <Search className="w-5 h-5 text-barber-gold" />
-              <input 
-                type="text" 
-                placeholder="Ej. Fade, Manicura, Tinte..." 
-                className="w-full bg-transparent border-none outline-none text-white placeholder-zinc-500 font-medium"
-              />
-            </div>
-            <div className="hidden sm:block w-[1px] bg-white/10 my-2" />
-            <div className="flex-1 flex items-center gap-3 px-4 py-3">
-              <MapPin className="w-5 h-5 text-barber-gold" />
-              <input 
-                type="text" 
-                placeholder="Ubicación" 
-                className="w-full bg-transparent border-none outline-none text-white placeholder-zinc-500 font-medium"
-              />
-            </div>
-            <Link to="/role-selection" className="px-8 py-4 bg-barber-gold text-black font-black uppercase tracking-widest text-xs rounded-2xl hover:scale-105 transition-transform flex items-center justify-center gap-2">
-              Buscar <ArrowRight className="w-4 h-4" />
-            </Link>
-          </div>
+          <Link to="/auth/client" className="flex-1 px-8 py-4 bg-blue-500 text-white font-black uppercase tracking-widest text-xs rounded-2xl hover:scale-105 transition-transform flex items-center justify-center gap-2">
+            Soy Cliente
+          </Link>
+          <Link to="/business-selection" className="flex-1 px-8 py-4 bg-amber-500 text-black font-black uppercase tracking-widest text-xs rounded-2xl hover:scale-105 transition-transform flex items-center justify-center gap-2">
+            Soy Negocio
+          </Link>
         </motion.div>
       </section>
 
@@ -120,7 +107,7 @@ export default function Landing() {
             <h2 className="text-3xl md:text-4xl font-black uppercase tracking-tight mb-2">Destacados esta semana</h2>
             <p className="text-zinc-400 font-medium">Los profesionales más valorados por nuestra comunidad.</p>
           </div>
-          <Link to="/role-selection" className="text-xs font-bold uppercase tracking-widest hover:text-zinc-300 flex items-center gap-2">
+          <Link to="/auth/client" className="text-xs font-bold uppercase tracking-widest hover:text-zinc-300 flex items-center gap-2">
             Ver Todos <ArrowRight className="w-4 h-4" />
           </Link>
         </div>
@@ -144,7 +131,7 @@ export default function Landing() {
                 <h3 className="text-xl font-bold mb-4">{spot.name}</h3>
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-medium text-zinc-400">{spot.reviews} reseñas</span>
-                  <Link to="/role-selection" className="px-4 py-2 bg-white/10 rounded-full text-xs font-bold uppercase tracking-widest hover:bg-white text-white hover:text-black transition-colors">
+                  <Link to="/auth/client" className="px-4 py-2 bg-white/10 rounded-full text-xs font-bold uppercase tracking-widest hover:bg-white text-white hover:text-black transition-colors">
                     Reservar
                   </Link>
                 </div>
@@ -192,10 +179,10 @@ export default function Landing() {
               Únete a Steylook y obtén un sistema de reservas automático, métricas de ingresos en tiempo real y exposición a miles de nuevos clientes buscando un corte en tu área.
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
-              <Link to="/register?role=barbero" className="px-8 py-4 bg-white text-black font-black uppercase tracking-widest text-xs rounded-full hover:scale-105 transition-transform flex items-center justify-center gap-2">
+              <Link to="/business-selection" className="px-8 py-4 bg-white text-black font-black uppercase tracking-widest text-xs rounded-full hover:scale-105 transition-transform flex items-center justify-center gap-2">
                 Afiliar mi Negocio <ArrowRight className="w-4 h-4" />
               </Link>
-              <Link to="/login" className="px-8 py-4 bg-transparent border border-white/20 text-white font-bold uppercase tracking-widest text-xs rounded-full hover:bg-white/5 transition-colors flex items-center justify-center">
+              <Link to="/business-selection" className="px-8 py-4 bg-transparent border border-white/20 text-white font-bold uppercase tracking-widest text-xs rounded-full hover:bg-white/5 transition-colors flex items-center justify-center">
                 Iniciar Sesión (Negocio)
               </Link>
             </div>

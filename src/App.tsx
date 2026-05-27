@@ -11,6 +11,9 @@ import Landing from './pages/Landing';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import RoleSelection from './pages/RoleSelection';
+import AuthClient from './pages/AuthClient';
+import BusinessSelection from './pages/BusinessSelection';
+import AuthBusiness from './pages/AuthBusiness';
 import ClienteHome from './pages/cliente/Home';
 import BarberoDashboard from './pages/barbero/Dashboard';
 import SaloneraDashboard from './pages/salon/Dashboard';
@@ -69,6 +72,9 @@ export default function App() {
           <Routes>
             <Route path="/" element={<RoleHome />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/auth/client" element={<AuthClient />} />
+            <Route path="/business-selection" element={<BusinessSelection />} />
+            <Route path="/auth/business" element={<AuthBusiness />} />
             <Route path="/role-selection" element={<RoleSelection />} />
             <Route path="/register" element={<Register />} />
 
