@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../lib/firebase';
-import { LogIn, ArrowLeft, Mail, Lock, Eye, EyeOff } from 'lucide-react';
+import { LogIn, ArrowLeft, Mail, Lock, Eye, EyeOff, Scissors, Users, Sparkles, Check } from 'lucide-react';
 import { getRolePath, parseRole, roleLabel } from '../lib/authHelpers';
 
 export default function Login() {
@@ -12,9 +12,21 @@ export default function Login() {
   const [showPass, setShowPass] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
-  const role = parseRole(searchParams.get('role'));
+  const [selectedRole, setSelectedRole] = useState(parseRole(searchParams.get('role')));
+  const role = selectedRole;
+
+  const ROLE_OPTIONS = [
+    { id: 'cliente', label: 'Cliente', icon: Users },
+    { id: 'barbero', label: 'Barbería', icon: Scissors },
+    { id: 'salonera', label: 'Salón', icon: Sparkles },
+  ];
+
+  const handleRoleChange = (newRole: string) => {
+    setSearchParams({ role: newRole });
+    setSelectedRole(parseRole(newRole));
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -62,6 +74,33 @@ export default function Login() {
               Accede como <span className="text-white font-medium">{roleLabel(role)}</span>
             </p>
           </motion.div>
+
+          {/* Role Selector */}
+          <div className="mb-8 p-4 bg-white/5 border border-white/10 rounded-2xl">
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400 mb-3">Cambiar rol:</p>
+            <div className="flex gap-2">
+              {ROLE_OPTIONS.map((opt) => {
+                const Icon = opt.icon;
+                const isActive = role === opt.id;
+                return (
+                  <button
+                    key={opt.id}
+                    type="button"
+                    onClick={() => handleRoleChange(opt.id)}
+                    className={`flex-1 flex items-center justify-center gap-1 px-3 py-3 rounded-xl transition-all font-bold text-sm uppercase tracking-wider ${
+                      isActive
+                        ? 'bg-white text-black'
+                        : 'bg-white/10 text-white hover:bg-white/20'
+                    }`}
+                  >
+                    <Icon className="w-4 h-4" />
+                    {opt.label}
+                    {isActive && <Check className="w-3 h-3 ml-auto" />}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
 
           <form onSubmit={handleLogin} className="space-y-4">
             <div className="space-y-1">
@@ -122,7 +161,7 @@ export default function Login() {
 
           <p className="text-center mt-8 text-zinc-500 text-sm font-light">
             ¿Primera vez?{' '}
-            <Link to={`/register?role=${role}`} className="text-white font-medium hover:underline">
+            <Link to="/role-selection" className="text-white font-medium hover:underline">
               Crear cuenta
             </Link>
           </p>

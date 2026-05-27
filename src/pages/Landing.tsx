@@ -34,7 +34,7 @@ export default function Landing() {
             <a href="#descubrir" className="text-zinc-400 hover:text-white transition-colors">Descubrir</a>
             <a href="#negocios" className="text-zinc-400 hover:text-white transition-colors">Soy Negocio</a>
             <Link to="/login" className="text-zinc-400 hover:text-white transition-colors">Iniciar Sesión</Link>
-            <Link to="/register?role=cliente" className="px-6 py-2.5 rounded-full bg-white text-black hover:scale-105 transition-transform">
+            <Link to="/role-selection" className="px-6 py-2.5 rounded-full bg-white text-black hover:scale-105 transition-transform">
               Crear Cuenta
             </Link>
           </div>
@@ -51,7 +51,7 @@ export default function Landing() {
           <a href="#descubrir" onClick={() => setMenuOpen(false)}>Descubrir</a>
           <a href="#negocios" onClick={() => setMenuOpen(false)}>Para Negocios</a>
           <Link to="/login" onClick={() => setMenuOpen(false)}>Iniciar Sesión</Link>
-          <Link to="/register?role=cliente" onClick={() => setMenuOpen(false)} className="py-3 bg-white text-black rounded-full">
+          <Link to="/role-selection" onClick={() => setMenuOpen(false)} className="py-3 bg-white text-black rounded-full">
             Crear Cuenta
           </Link>
         </div>
@@ -106,7 +106,7 @@ export default function Landing() {
                 className="w-full bg-transparent border-none outline-none text-white placeholder-zinc-500 font-medium"
               />
             </div>
-            <Link to="/register?role=cliente" className="px-8 py-4 bg-barber-gold text-black font-black uppercase tracking-widest text-xs rounded-2xl hover:scale-105 transition-transform flex items-center justify-center gap-2">
+            <Link to="/role-selection" className="px-8 py-4 bg-barber-gold text-black font-black uppercase tracking-widest text-xs rounded-2xl hover:scale-105 transition-transform flex items-center justify-center gap-2">
               Buscar <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
@@ -120,7 +120,7 @@ export default function Landing() {
             <h2 className="text-3xl md:text-4xl font-black uppercase tracking-tight mb-2">Destacados esta semana</h2>
             <p className="text-zinc-400 font-medium">Los profesionales más valorados por nuestra comunidad.</p>
           </div>
-          <Link to="/register?role=cliente" className="text-xs font-bold uppercase tracking-widest hover:text-zinc-300 flex items-center gap-2">
+          <Link to="/role-selection" className="text-xs font-bold uppercase tracking-widest hover:text-zinc-300 flex items-center gap-2">
             Ver Todos <ArrowRight className="w-4 h-4" />
           </Link>
         </div>
@@ -144,7 +144,7 @@ export default function Landing() {
                 <h3 className="text-xl font-bold mb-4">{spot.name}</h3>
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-medium text-zinc-400">{spot.reviews} reseñas</span>
-                  <Link to="/register?role=cliente" className="px-4 py-2 bg-white/10 rounded-full text-xs font-bold uppercase tracking-widest hover:bg-white text-white hover:text-black transition-colors">
+                  <Link to="/role-selection" className="px-4 py-2 bg-white/10 rounded-full text-xs font-bold uppercase tracking-widest hover:bg-white text-white hover:text-black transition-colors">
                     Reservar
                   </Link>
                 </div>

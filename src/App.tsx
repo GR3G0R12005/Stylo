@@ -10,6 +10,7 @@ import InstallPrompt from './components/InstallPrompt';
 import Landing from './pages/Landing';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import RoleSelection from './pages/RoleSelection';
 import ClienteHome from './pages/cliente/Home';
 import BarberoDashboard from './pages/barbero/Dashboard';
 import SaloneraDashboard from './pages/salon/Dashboard';
@@ -68,6 +69,7 @@ export default function App() {
           <Routes>
             <Route path="/" element={<RoleHome />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/role-selection" element={<RoleSelection />} />
             <Route path="/register" element={<Register />} />
 
             <Route path="/cliente" element={
