@@ -24,14 +24,14 @@ export default function FilterPanel({ filters, onFilterChange, onClose }: Filter
       initial={{ opacity: 0, x: -20 }}
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: -20 }}
-      className="bg-white rounded-[2.5rem] border border-theme-secondary/10 shadow-2xl p-8 sticky top-24 z-20 w-full lg:max-w-xs h-fit"
+      className="bg-theme-bg rounded-[2.5rem] border border-theme-secondary/10 shadow-2xl p-8 sticky top-24 z-20 w-full lg:max-w-xs h-fit text-theme-text"
     >
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-2">
           <SlidersHorizontal className="w-5 h-5 text-theme-primary" />
           <h3 className="text-xl font-black tracking-tight">Filtros</h3>
         </div>
-        <button onClick={onClose} className="p-2 hover:bg-zinc-50 rounded-full lg:hidden">
+        <button onClick={onClose} className="p-2 hover:bg-theme-secondary/10 rounded-full lg:hidden transition-colors">
           <X className="w-5 h-5" />
         </button>
       </div>
@@ -49,7 +49,7 @@ export default function FilterPanel({ filters, onFilterChange, onClose }: Filter
                   "px-4 py-2 rounded-xl text-xs font-bold transition-all border",
                   filters.category === cat
                     ? "bg-theme-primary text-white border-theme-primary shadow-lg shadow-theme-primary/20"
-                    : "bg-zinc-50 text-zinc-500 border-zinc-100 hover:border-theme-primary/30"
+                    : "bg-theme-secondary/10 text-theme-text/70 border-theme-secondary/20 hover:border-theme-primary/30 hover:bg-theme-secondary/20"
                 )}
               >
                 {cat}
@@ -70,7 +70,7 @@ export default function FilterPanel({ filters, onFilterChange, onClose }: Filter
                   "p-4 rounded-2xl text-sm font-bold transition-all border flex items-center justify-center gap-2",
                   filters.minRating === rating
                     ? "bg-theme-primary text-white border-theme-primary shadow-lg shadow-theme-primary/20 scale-105"
-                    : "bg-zinc-50 text-zinc-500 border-zinc-100"
+                    : "bg-theme-secondary/10 text-theme-text/70 border-theme-secondary/20 hover:bg-theme-secondary/20"
                 )}
               >
                 <Star className={cn("w-4 h-4", filters.minRating === rating ? "fill-white" : "fill-yellow-400 text-yellow-400")} />
@@ -92,7 +92,7 @@ export default function FilterPanel({ filters, onFilterChange, onClose }: Filter
                   "flex-1 p-4 rounded-2xl transition-all border flex items-center justify-center gap-0.5",
                   filters.maxPrice === level
                     ? "bg-theme-primary text-white border-theme-primary shadow-lg shadow-theme-primary/20 scale-110 z-10"
-                    : "bg-zinc-50 text-zinc-400 border-zinc-100"
+                    : "bg-theme-secondary/10 text-theme-text/60 border-theme-secondary/20 hover:bg-theme-secondary/20"
                 )}
               >
                 {[...Array(level)].map((_, i) => (

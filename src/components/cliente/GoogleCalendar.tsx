@@ -28,16 +28,16 @@ export default function GoogleCalendar({ selectedDate, onDateSelect }: GoogleCal
   const prevMonth = () => setCurrentMonth(subMonths(currentMonth, 1));
 
   return (
-    <div className="bg-white rounded-[2rem] border border-zinc-100 p-6 shadow-sm overflow-hidden">
+    <div className="bg-theme-bg rounded-[2rem] border border-theme-secondary/20 p-6 shadow-sm overflow-hidden text-theme-text">
       <div className="flex items-center justify-between mb-6">
         <h3 className="text-lg font-black tracking-tight first-letter:uppercase">
           {format(currentMonth, 'MMMM yyyy', { locale: es })}
         </h3>
         <div className="flex gap-2">
-          <button onClick={prevMonth} className="p-2 hover:bg-zinc-100 rounded-full transition-colors">
+          <button onClick={prevMonth} className="p-2 hover:bg-theme-secondary/10 rounded-full transition-colors">
             <ChevronLeft className="w-5 h-5" />
           </button>
-          <button onClick={nextMonth} className="p-2 hover:bg-zinc-100 rounded-full transition-colors">
+          <button onClick={nextMonth} className="p-2 hover:bg-theme-secondary/10 rounded-full transition-colors">
             <ChevronRight className="w-5 h-5" />
           </button>
         </div>
@@ -45,7 +45,7 @@ export default function GoogleCalendar({ selectedDate, onDateSelect }: GoogleCal
 
       <div className="grid grid-cols-7 gap-1 mb-2">
         {days.map(day => (
-          <div key={day} className="text-center text-[10px] font-black text-zinc-400 uppercase tracking-widest py-2">
+          <div key={day} className="text-center text-[10px] font-black text-theme-text/60 uppercase tracking-widest py-2">
             {day}
           </div>
         ))}
@@ -65,9 +65,9 @@ export default function GoogleCalendar({ selectedDate, onDateSelect }: GoogleCal
               disabled={isPast}
               className={cn(
                 "relative h-12 flex flex-col items-center justify-center rounded-2xl text-sm font-bold transition-all",
-                isPast ? "text-zinc-300 cursor-not-allowed opacity-50" : "",
-                !isCurrentMonth && !isPast && "text-zinc-300",
-                isCurrentMonth && !isSelected && !isPast && "text-zinc-600 hover:bg-zinc-50",
+                isPast ? "text-theme-text/30 cursor-not-allowed opacity-50" : "",
+                !isCurrentMonth && !isPast && "text-theme-text/40",
+                isCurrentMonth && !isSelected && !isPast && "text-theme-text/80 hover:bg-theme-secondary/10",
                 isSelected && "bg-theme-primary text-white shadow-lg shadow-theme-primary/20",
                 isToday && !isSelected && "text-theme-primary"
               )}

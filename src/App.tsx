@@ -57,6 +57,15 @@ function RoleHome() {
 
 function ThemeWrapper({ children }: { children: React.ReactNode }) {
   const { theme } = useAuth();
+  React.useEffect(() => {
+    try {
+      const saved = localStorage.getItem('steylook_dark') === 'true';
+      if (saved) document.documentElement.classList.add('dark');
+      else document.documentElement.classList.remove('dark');
+    } catch {
+      // ignore
+    }
+  }, []);
   return (
     <div data-theme={theme} className="min-h-screen">
       {children}
