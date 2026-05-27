@@ -1,0 +1,117 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile with role-based attributes.",
+      "type": "object",
+      "properties": {
+        "nombre": { "type": "string", "description": "Full name" },
+        "email": { "type": "string", "format": "email" },
+        "tipo": { "type": "string", "enum": ["cliente", "barbero", "salonera"], "description": "User role" },
+        "foto": { "type": "string", "description": "Profile picture URL" },
+        "telefono": { "type": "string", "description": "Contact number" },
+        "shopId": { "type": "string", "description": "Reference to the shop they belong to (for barbers/stylists)" },
+        "services": { "type": "array", "description": "List of service IDs offered" }
+      },
+      "required": ["nombre", "email", "tipo"]
+    },
+    "Shop": {
+      "title": "Shop",
+      "description": "A barbershop or beauty salon.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "address": { "type": "string" },
+        "type": { "type": "string", "enum": ["barberia", "salon"] },
+        "photo": { "type": "string" },
+        "rating": { "type": "number" }
+      },
+      "required": ["name", "type"]
+    },
+    "Appointment": {
+      "title": "Appointment",
+      "description": "A booking between a client and a provider.",
+      "type": "object",
+      "properties": {
+        "clientId": { "type": "string" },
+        "providerId": { "type": "string" },
+        "shopId": { "type": "string" },
+        "serviceId": { "type": "string" },
+        "date": { "type": "string", "format": "date-time" },
+        "status": { "type": "string", "enum": ["pending", "confirmed", "cancelled", "completed"] },
+        "price": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["clientId", "providerId", "shopId", "serviceId", "date", "status"]
+    },
+    "Review": {
+      "title": "Review",
+      "description": "User review for a shop.",
+      "type": "object",
+      "properties": {
+        "shopId": { "type": "string" },
+        "clientId": { "type": "string" },
+        "clientName": { "type": "string" },
+        "rating": { "type": "number" },
+        "comment": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["shopId", "clientId", "rating", "comment"]
+    },
+    "Chat": {
+      "title": "Chat",
+      "description": "Real-time communication between client and provider.",
+      "type": "object",
+      "properties": {
+        "participants": { "type": "array", "items": { "type": "string" } },
+        "lastMessage": { "type": "string" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["participants"]
+    },
+    "Message": {
+      "title": "Message",
+      "description": "Individual message in a chat.",
+      "type": "object",
+      "properties": {
+        "chatId": { "type": "string" },
+        "senderId": { "type": "string" },
+        "text": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["chatId", "senderId", "text"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User profiles"
+    },
+    "/shops/{shopId}": {
+      "schema": "Shop",
+      "description": "Barbershops and salons"
+    },
+    "/shops/{shopId}/services/{serviceId}": {
+      "schema": { "$ref": "#/entities/Service" },
+      "description": "Services offered by a specific shop"
+    },
+    "/appointments/{appointmentId}": {
+      "schema": "Appointment",
+      "description": "Booked appointments"
+    },
+    "/reviews/{reviewId}": {
+      "schema": "Review",
+      "description": "Shop reviews"
+    },
+    "/chats/{chatId}": {
+      "schema": "Chat",
+      "description": "Chat sessions"
+    },
+    "/chats/{chatId}/messages/{messageId}": {
+      "schema": "Message",
+      "description": "Messages within a chat"
+    }
+  }
+}

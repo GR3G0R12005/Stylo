@@ -1,0 +1,144 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Poppins:wght@200;300;400;500;600;700;800;900&family=Montserrat:wght@300;400;500;600;700;800;900&family=Bebas+Neue&family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=JetBrains+Mono:wght@400;500&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-poppins: "Poppins", sans-serif;
+  --font-montserrat: "Montserrat", sans-serif;
+  --font-bebas: "Bebas Neue", sans-serif;
+  --font-serif: "Playfair Display", serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+
+  --color-barber-dark: #121212;
+  --color-barber-gold: #D4AF37;
+  --color-salon-pink: #E8B4B8;
+  --color-salon-beige: #F5F2ED;
+  --color-client-blue: #003B5C;
+  --color-client-cyan: #00C2FF;
+
+  --color-theme-primary: var(--theme-primary);
+  --color-theme-secondary: var(--theme-secondary);
+  --color-theme-accent: var(--theme-accent);
+  --color-theme-bg: var(--theme-bg);
+  --color-theme-text: var(--theme-text);
+}
+
+:root {
+  --theme-primary: #003B5C;
+  --theme-secondary: #00C2FF;
+  --theme-accent: #D4AF37;
+  --theme-bg: #ffffff;
+  --theme-text: #18181b;
+}
+
+[data-theme="feminine"] {
+  --theme-primary: #ec4899;
+  --theme-secondary: #fbcfe8;
+  --theme-accent: #9d174d;
+  --theme-bg: #fff1f2;
+  --theme-text: #831843;
+}
+
+[data-theme="masculine"] {
+  --theme-primary: #09090b;
+  --theme-secondary: #71717a;
+  --theme-accent: #D4AF37;
+  --theme-bg: #fafafa;
+  --theme-text: #09090b;
+}
+
+.dark {
+  --theme-primary: #D4AF37;
+  --theme-secondary: #a1a1aa;
+  --theme-accent: #00C2FF;
+  --theme-bg: #09090b !important;
+  --theme-text: #fafafa !important;
+}
+
+@layer base {
+  * {
+    @apply border-zinc-200;
+  }
+  body {
+    @apply bg-theme-bg text-theme-text transition-colors duration-500 font-sans;
+  }
+}
+
+/* Custom scrollbar for better aesthetic */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-zinc-800 rounded-full;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* ── PWA Mobile-First Optimizations ──────────────────────────────────────── */
+
+/* Remove tap highlight on mobile for native feel */
+* {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+/* Prevent iOS bounce scroll on the root (app-like feel) */
+html, body {
+  overscroll-behavior: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Safe-area insets for notched phones (iPhone X+) */
+#root {
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+
+/* Smooth page-level transitions */
+.page-transition-enter {
+  opacity: 0;
+  transform: translateY(12px);
+}
+.page-transition-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 280ms ease, transform 280ms ease;
+}
+.page-transition-exit {
+  opacity: 1;
+}
+.page-transition-exit-active {
+  opacity: 0;
+  transition: opacity 200ms ease;
+}
+
+/* PWA Splash-like initial load fade-in */
+@keyframes pwa-fadein {
+  from { opacity: 0; transform: scale(0.98); }
+  to   { opacity: 1; transform: scale(1); }
+}
+#root {
+  animation: pwa-fadein 0.4s ease forwards;
+}
+
+/* Better button press feedback on mobile */
+button:active {
+  transform: scale(0.97);
+  transition: transform 80ms ease;
+}
+
+/* Prevent text selection on interactive UI elements */
+nav, button, [role="button"] {
+  user-select: none;
+  -webkit-user-select: none;
+}

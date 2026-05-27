@@ -1,0 +1,6 @@
+{
+  "name": "Steylook",
+  "description": "Una plataforma de reservas premium y moderna para barberías y salones de belleza con interfaces especializadas para clientes, barberos y estilistas.",
+  "requestFramePermissions": ["camera"],
+  "majorCapabilities": []
+}
