@@ -40,7 +40,13 @@ export default function ClienteHome() {
     maxPrice: 3,
     onlyAvailable: false
   });
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem('steylook_dark') === 'true';
+    } catch {
+      return false;
+    }
+  });
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState<'home' | 'appointments'>('home');
 
@@ -49,6 +55,11 @@ export default function ClienteHome() {
       document.documentElement.classList.add('dark');
     } else {
       document.documentElement.classList.remove('dark');
+    }
+    try {
+      localStorage.setItem('steylook_dark', String(isDarkMode));
+    } catch {
+      // ignore
     }
   }, [isDarkMode]);
 
@@ -279,10 +290,10 @@ export default function ClienteHome() {
             <p className="text-zinc-500 font-medium mt-1">Próximas, pasadas y valoraciones</p>
           </motion.div>
           {appointments.length === 0 ? (
-            <div className="text-center py-16 sm:py-24 bg-white dark:bg-zinc-900 rounded-[2rem] sm:rounded-[3rem] border border-theme-secondary/10">
-              <Calendar className="w-12 h-12 text-zinc-300 mx-auto mb-4" />
-              <p className="font-bold text-zinc-600 dark:text-zinc-300">Aún no tienes citas</p>
-              <p className="text-sm text-zinc-400 mt-2 mb-6">Explora locales y reserva tu primera cita</p>
+            <div className="text-center py-16 sm:py-24 bg-theme-bg rounded-[2rem] sm:rounded-[3rem] border border-theme-secondary/10">
+              <Calendar className="w-12 h-12 text-theme-text/40 mx-auto mb-4" />
+              <p className="font-bold text-theme-text/70">Aún no tienes citas</p>
+              <p className="text-sm text-theme-text/50 mt-2 mb-6">Explora locales y reserva tu primera cita</p>
               <button type="button" onClick={() => setActiveTab('home')} className="px-6 py-3 rounded-2xl bg-theme-primary text-white text-xs font-black uppercase tracking-widest">Explorar locales</button>
             </div>
           ) : (
@@ -334,7 +345,7 @@ export default function ClienteHome() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Buscar barbería, salón o tratamiento..."
-              className="w-full bg-white dark:bg-zinc-900 border border-theme-secondary/20 rounded-2xl sm:rounded-[1.8rem] py-4 sm:py-5 pl-12 sm:pl-14 pr-4 focus:outline-none focus:ring-4 focus:ring-theme-primary/10 font-medium shadow-sm"
+              className="w-full bg-theme-bg text-theme-text border border-theme-secondary/20 rounded-2xl sm:rounded-[1.8rem] py-4 sm:py-5 pl-12 sm:pl-14 pr-4 focus:outline-none focus:ring-4 focus:ring-theme-primary/10 font-medium shadow-sm placeholder:text-theme-text/50"
             />
           </div>
           <button 
@@ -343,7 +354,7 @@ export default function ClienteHome() {
               "p-5 rounded-[1.8rem] border flex items-center justify-center gap-3 font-bold transition-all",
               showFilters 
                 ? "bg-theme-primary text-white border-theme-primary shadow-xl shadow-theme-primary/20" 
-                : "bg-white text-zinc-900 border-theme-secondary/10 hover:border-theme-primary"
+                : "bg-theme-bg text-theme-text border-theme-secondary/10 hover:border-theme-primary"
             )}
           >
             <SlidersHorizontal className="w-6 h-6" />
@@ -432,12 +443,12 @@ export default function ClienteHome() {
           {/* Shop Grid */}
           <div className="flex-1">
             {filteredShops.length === 0 ? (
-              <div className="text-center py-20 bg-white rounded-[3rem] border border-theme-secondary/10">
-                <div className="w-20 h-20 bg-zinc-50 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <Search className="w-10 h-10 text-zinc-300" />
+              <div className="text-center py-20 bg-theme-bg rounded-[3rem] border border-theme-secondary/10">
+                <div className="w-20 h-20 bg-theme-secondary/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <Search className="w-10 h-10 text-theme-text/40" />
                 </div>
-                <h3 className="text-2xl font-black text-zinc-900 mb-2">No encontramos resultados</h3>
-                <p className="text-zinc-500">Prueba ajustando tus filtros de búsqueda.</p>
+                <h3 className="text-2xl font-black text-theme-text mb-2">No encontramos resultados</h3>
+                <p className="text-theme-text/60">Prueba ajustando tus filtros de búsqueda.</p>
                 <button 
                   onClick={() => setFilters({ category: 'Todos', minRating: 0, maxPrice: 3, onlyAvailable: false })}
                   className="mt-8 text-theme-primary font-black uppercase tracking-widest text-sm"
@@ -455,7 +466,7 @@ export default function ClienteHome() {
                     viewport={{ once: true }}
                     transition={{ delay: i * 0.1 }}
                     onClick={() => handleSelectShop(shop)}
-                    className="group bg-white rounded-[2.5rem] overflow-hidden border border-theme-secondary/10 shadow-sm hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 cursor-pointer"
+                    className="group bg-theme-bg rounded-[2.5rem] overflow-hidden border border-theme-secondary/10 shadow-sm hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 cursor-pointer"
                   >
                     <div className="h-64 overflow-hidden relative">
                       <img 
@@ -468,11 +479,11 @@ export default function ClienteHome() {
                         <p className="text-white text-sm font-medium leading-relaxed italic line-clamp-2">{shop.description}</p>
                       </div>
                       <div className="absolute top-6 right-6 flex flex-col gap-2">
-                        <div className="bg-white/95 backdrop-blur-md px-4 py-2 rounded-2xl flex items-center gap-2 text-xs font-black shadow-lg">
+                        <div className="bg-theme-bg/95 backdrop-blur-md px-4 py-2 rounded-2xl flex items-center gap-2 text-xs font-black shadow-lg text-theme-text border border-theme-secondary/20">
                           <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
                           {shop.rating}
                         </div>
-                        <div className="bg-zinc-900/90 backdrop-blur-md px-4 py-2 rounded-2xl flex items-center gap-0.5 text-xs font-black text-white shadow-lg self-end">
+                        <div className="bg-theme-text/90 backdrop-blur-md px-4 py-2 rounded-2xl flex items-center gap-0.5 text-xs font-black text-theme-bg shadow-lg self-end">
                           {[...Array(shop.priceRange)].map((_, i) => <DollarSign key={i} className="w-3 h-3" />)}
                         </div>
                       </div>
@@ -521,7 +532,7 @@ export default function ClienteHome() {
               animate={{ y: 0, scale: 1 }}
               exit={{ y: '100%', scale: 0.9 }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="bg-white w-full max-w-2xl rounded-t-[3.5rem] sm:rounded-[3.5rem] p-10 max-h-[90vh] overflow-y-auto shadow-2xl relative"
+              className="bg-theme-bg w-full max-w-2xl rounded-t-[3.5rem] sm:rounded-[3.5rem] p-10 max-h-[90vh] overflow-y-auto shadow-2xl relative text-theme-text"
             >
               <button 
                 onClick={() => {
@@ -530,7 +541,7 @@ export default function ClienteHome() {
                   setBookingDate(null);
                   setBookingTime('');
                 }} 
-                className="absolute top-8 right-8 p-4 bg-zinc-50 rounded-full hover:bg-zinc-100 transition-colors z-10"
+                className="absolute top-8 right-8 p-4 bg-theme-secondary/10 rounded-full hover:bg-theme-secondary/20 transition-colors z-10"
               >
                 <X className="w-6 h-6" />
               </button>
@@ -549,11 +560,11 @@ export default function ClienteHome() {
                   </button>
                 </div>
                 <div className="flex flex-col gap-2">
-                  <div className="flex items-center gap-2 text-zinc-500 font-medium">
+                  <div className="flex items-center gap-2 text-theme-text/60 font-medium">
                     <MapPin className="w-4 h-4" /> {selectedShop.address}
                   </div>
                   {selectedShop.phone && (
-                    <div className="flex items-center gap-2 text-zinc-500 font-medium">
+                    <div className="flex items-center gap-2 text-theme-text/60 font-medium">
                       <Phone className="w-4 h-4" /> {selectedShop.phone}
                     </div>
                   )}
@@ -562,29 +573,29 @@ export default function ClienteHome() {
 
               {/* Works Carousel */}
               <div className="mb-10">
-                <h4 className="text-xs font-black uppercase tracking-[0.3em] text-zinc-400 mb-6">Nuestros Trabajos</h4>
+                <h4 className="text-xs font-black uppercase tracking-[0.3em] text-theme-text/60 mb-6">Nuestros Trabajos</h4>
                 <WorkCarousel type={selectedShop.type} />
               </div>
 
               {!selectedService ? (
                 <div className="space-y-12">
                   <div className="space-y-6">
-                    <h4 className="text-xs font-black uppercase tracking-[0.3em] text-zinc-400 mb-4">Selecciona un Servicio</h4>
+                    <h4 className="text-xs font-black uppercase tracking-[0.3em] text-theme-text/60 mb-4">Selecciona un Servicio</h4>
                     <div className="grid grid-cols-1 gap-4">
                       {services.map(service => (
                         <button
                           key={service.id}
                           onClick={() => setSelectedService(service)}
-                          className="w-full flex items-center justify-between p-7 rounded-[2rem] bg-zinc-50 hover:bg-zinc-100 transition-all border-2 border-transparent hover:border-zinc-200 text-left group"
+                          className="w-full flex items-center justify-between p-7 rounded-[2rem] bg-theme-secondary/10 hover:bg-theme-secondary/20 transition-all border-2 border-transparent hover:border-theme-secondary/30 text-left group"
                         >
                           <div>
                             <div className="font-black text-xl mb-1 group-hover:text-theme-primary transition-colors">{service.name}</div>
-                            <div className="text-zinc-400 text-sm font-bold flex items-center gap-2">
+                            <div className="text-theme-text/60 text-sm font-bold flex items-center gap-2">
                               <Clock className="w-4 h-4" /> {service.duration} minutos
                             </div>
                           </div>
                           <div className="text-right">
-                            <div className="text-2xl font-black text-zinc-900">{formatCurrency(service.price)}</div>
+                            <div className="text-2xl font-black text-theme-primary">{formatCurrency(service.price)}</div>
                             <div className="text-[10px] font-black text-theme-primary uppercase tracking-[0.2em] opacity-0 group-hover:opacity-100 transition-all translate-y-2 group-hover:translate-y-0">Reservar</div>
                           </div>
                         </button>
@@ -593,16 +604,16 @@ export default function ClienteHome() {
                   </div>
 
                   <div className="space-y-6">
-                    <h4 className="text-xs font-black uppercase tracking-[0.3em] text-zinc-400 mb-4">Reseñas de Clientes</h4>
+                    <h4 className="text-xs font-black uppercase tracking-[0.3em] text-theme-text/60 mb-4">Reseñas de Clientes</h4>
                     <ReviewList shopId={selectedShop.id} />
                   </div>
                 </div>
               ) : !bookingDate ? (
                 <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
-                  <button onClick={() => setSelectedService(null)} className="inline-flex items-center gap-2 px-6 py-2 rounded-full bg-zinc-100 text-zinc-600 text-xs font-black uppercase tracking-widest hover:bg-zinc-200 transition-colors">
+                  <button onClick={() => setSelectedService(null)} className="inline-flex items-center gap-2 px-6 py-2 rounded-full bg-theme-secondary/10 text-theme-text/70 text-xs font-black uppercase tracking-widest hover:bg-theme-secondary/20 transition-colors">
                     <ArrowLeft className="w-4 h-4" /> {selectedService.name}
                   </button>
-                  <h4 className="text-xs font-black uppercase tracking-[0.3em] text-zinc-400">Selecciona fecha</h4>
+                  <h4 className="text-xs font-black uppercase tracking-[0.3em] text-theme-text/60">Selecciona fecha</h4>
                   <GoogleCalendar 
                     selectedDate={bookingDate}
                     onDateSelect={(date) => setBookingDate(date)}
@@ -611,17 +622,17 @@ export default function ClienteHome() {
               ) : (
                 <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4">
                    <div className="flex items-center justify-between">
-                    <button onClick={() => setBookingDate(null)} className="inline-flex items-center gap-2 px-6 py-2 rounded-full bg-zinc-100 text-zinc-600 text-xs font-black uppercase tracking-widest hover:bg-zinc-200 transition-colors">
+                    <button onClick={() => setBookingDate(null)} className="inline-flex items-center gap-2 px-6 py-2 rounded-full bg-theme-secondary/10 text-theme-text/70 text-xs font-black uppercase tracking-widest hover:bg-theme-secondary/20 transition-colors">
                       <Calendar className="w-4 h-4" /> {format(bookingDate, 'd MMMM', { locale: es })}
                     </button>
                     <div className="text-right">
-                      <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Resumen</p>
-                      <p className="font-black text-lg">{selectedService.name}</p>
+                      <p className="text-[10px] font-black text-theme-text/60 uppercase tracking-widest">Resumen</p>
+                      <p className="font-black text-lg text-theme-text">{selectedService.name}</p>
                     </div>
                   </div>
 
                   <div className="space-y-6">
-                    <h4 className="text-xs font-black uppercase tracking-[0.3em] text-zinc-400">Horarios Disponibles</h4>
+                    <h4 className="text-xs font-black uppercase tracking-[0.3em] text-theme-text/60">Horarios Disponibles</h4>
                     <div className="grid grid-cols-3 gap-4">
                       {['09:00', '10:00', '11:00', '12:00', '13:00', '15:00', '16:00', '17:00', '18:00'].map(time => (
                         <button
@@ -630,8 +641,8 @@ export default function ClienteHome() {
                           className={cn(
                             "py-5 rounded-[1.5rem] font-black text-lg transition-all border-2",
                             bookingTime === time 
-                              ? "bg-zinc-900 text-white border-zinc-900 shadow-xl shadow-zinc-200 scale-105" 
-                              : "bg-zinc-50 border-transparent hover:border-zinc-200"
+                              ? "bg-theme-primary text-white border-theme-primary shadow-xl shadow-theme-primary/20 scale-105" 
+                              : "bg-theme-secondary/10 border-transparent hover:border-theme-secondary/30 text-theme-text hover:bg-theme-secondary/20"
                           )}
                         >
                           {time}
