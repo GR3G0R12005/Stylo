@@ -90,9 +90,9 @@
   touch-action: manipulation;
 }
 
-/* Prevent iOS bounce scroll on the root (app-like feel) */
+/* Prevent vertical overscroll showing white space and support touch scrolling */
 html, body {
-  overscroll-behavior: none;
+  background-color: #000000; /* Fallback dark color to prevent white bars on bounce */
   -webkit-overflow-scrolling: touch;
 }
 

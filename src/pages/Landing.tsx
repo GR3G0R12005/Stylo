@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { Link } from 'react-router-dom';
-import { Scissors, Search, Star, MapPin, ArrowRight, Sparkles, Calendar, User } from 'lucide-react';
+import { Scissors, Search, Star, MapPin, ArrowRight, Sparkles, Calendar, User, X } from 'lucide-react';
 
 const FEATURED_SPOTS = [
   { name: 'Stylo Original', type: 'Barbería', rating: '4.9', reviews: 128, img: 'https://images.unsplash.com/photo-1585747860715-2ba37e788b70?w=500&auto=format&fit=crop&q=60' },
@@ -13,9 +14,10 @@ export default function Landing() {
   const [isSheetOpen, setIsSheetOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-black text-white font-sans overflow-x-hidden selection:bg-zinc-800 selection:text-white">
+    <>
+      <div className="min-h-screen bg-black text-white font-sans overflow-x-hidden selection:bg-zinc-800 selection:text-white">
       {/* Background glow */}
-      <div className="fixed top-0 left-0 w-full h-full -z-10 pointer-events-none">
+      <div className="fixed top-0 left-0 w-full h-full -z-10 pointer-events-none overflow-hidden">
         <div className="absolute top-[-10%] right-[-5%] w-[600px] h-[600px] bg-blue-600/15 blur-[150px] rounded-full" />
         <div className="absolute bottom-[-10%] left-[-5%] w-[600px] h-[600px] bg-pink-600/10 blur-[150px] rounded-full" />
       </div>
@@ -207,102 +209,128 @@ export default function Landing() {
         </div>
         <p>© {new Date().getFullYear()} Steylook Global Group. Todos los derechos reservados.</p>
       </footer>
+    </div>
+    <RoleBottomSheet isOpen={isSheetOpen} onClose={() => setIsSheetOpen(false)} />
+    </>
+  );
+}
 
-      {/* Bottom Sheet for Role Selection */}
-      <AnimatePresence>
-        {isSheetOpen && (
-          <>
-            {/* Backdrop */}
+function RoleBottomSheet({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+      document.documentElement.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
+    };
+  }, [isOpen]);
+
+  return createPortal(
+    <AnimatePresence>
+      {isOpen && (
+        <>
+          {/* Backdrop */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={onClose}
+            className="fixed inset-0 bg-black/70 backdrop-blur-md z-[9998] cursor-pointer"
+          />
+
+          {/* Wrapper for responsive centering */}
+          <div className="fixed inset-0 z-[9999] flex items-end md:items-center justify-center p-0 md:p-6 pointer-events-none">
+            {/* Sheet / Modal */}
             <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setIsSheetOpen(false)}
-              className="fixed inset-0 bg-black/70 backdrop-blur-md z-50 cursor-pointer"
-            />
-            
-            {/* Sheet */}
-            <motion.div
-              initial={{ y: "100%" }}
-              animate={{ y: 0 }}
-              exit={{ y: "100%" }}
-              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="fixed bottom-0 left-0 right-0 w-full max-w-md mx-auto bg-zinc-900/95 border-t border-white/10 rounded-t-[2.5rem] p-8 z-50 shadow-2xl backdrop-blur-2xl"
+              initial={
+                isMobile
+                  ? { y: "100%", scale: 1, opacity: 1 }
+                  : { y: 0, scale: 0.9, opacity: 0 }
+              }
+              animate={
+                isMobile
+                  ? { y: 0, scale: 1, opacity: 1 }
+                  : { y: 0, scale: 1, opacity: 1 }
+              }
+              exit={
+                isMobile
+                  ? { y: "100%", scale: 1, opacity: 1 }
+                  : { y: 0, scale: 0.9, opacity: 0 }
+              }
+              transition={
+                isMobile
+                  ? { type: 'spring', damping: 25, stiffness: 200 }
+                  : { duration: 0.25, ease: 'easeOut' }
+              }
+              className="pointer-events-auto w-full max-w-md bg-zinc-900 border-t md:border border-white/10 rounded-t-[2.5rem] md:rounded-[2.5rem] p-8 shadow-2xl relative"
             >
-              {/* Handle */}
-              <div className="w-12 h-1 bg-zinc-700 rounded-full mx-auto mb-6" />
-              
+              {/* Top pull handle - only on mobile */}
+              {isMobile && <div className="w-12 h-1 bg-zinc-700 rounded-full mx-auto mb-6" />}
+
+              {/* Close Button - only on desktop */}
+              {!isMobile && (
+                <button
+                  onClick={onClose}
+                  className="absolute top-6 right-6 p-2 text-zinc-400 hover:text-white rounded-full hover:bg-white/5 transition-colors cursor-pointer"
+                  aria-label="Cerrar"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              )}
+
               <div className="text-center mb-8">
                 <h3 className="text-2xl font-black uppercase tracking-tight mb-2 text-white">Comenzar en Steylook</h3>
                 <p className="text-zinc-400 text-sm font-medium">Elige cómo quieres continuar</p>
               </div>
-              
+
               <div className="space-y-4">
-                {/* Cliente Option */}
-                <Link
-                  to="/auth/client"
-                  onClick={() => setIsSheetOpen(false)}
-                  className="flex items-center justify-between p-5 rounded-2xl bg-white/5 border border-white/10 hover:border-white/20 transition-all group"
-                >
+                <Link to="/auth/client" onClick={onClose} className="flex items-center justify-between p-5 rounded-2xl bg-white/5 border border-white/10 hover:border-white/20 transition-all group">
                   <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-xl bg-blue-500/20 flex items-center justify-center text-blue-400">
-                      <User className="w-5 h-5" />
-                    </div>
-                    <div className="text-left">
-                      <h4 className="font-bold text-white">Soy Cliente</h4>
-                      <p className="text-xs text-zinc-400">Buscar servicios y reservar citas</p>
-                    </div>
+                    <div className="w-10 h-10 rounded-xl bg-blue-500/20 flex items-center justify-center text-blue-400"><User className="w-5 h-5" /></div>
+                    <div className="text-left"><h4 className="font-bold text-white">Soy Cliente</h4><p className="text-xs text-zinc-400">Buscar servicios y reservar citas</p></div>
                   </div>
                   <ArrowRight className="w-4 h-4 text-zinc-500 group-hover:translate-x-1 transition-transform" />
                 </Link>
 
-                {/* Barbero Option */}
-                <Link
-                  to="/auth/business?type=barbero"
-                  onClick={() => setIsSheetOpen(false)}
-                  className="flex items-center justify-between p-5 rounded-2xl bg-white/5 border border-white/10 hover:border-white/20 transition-all group"
-                >
+                <Link to="/auth/business?type=barbero" onClick={onClose} className="flex items-center justify-between p-5 rounded-2xl bg-white/5 border border-white/10 hover:border-white/20 transition-all group">
                   <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center text-amber-400">
-                      <Scissors className="w-5 h-5" />
-                    </div>
-                    <div className="text-left">
-                      <h4 className="font-bold text-white">Soy Barbero</h4>
-                      <p className="text-xs text-zinc-400">Gestionar barbería y mis turnos</p>
-                    </div>
+                    <div className="w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center text-amber-400"><Scissors className="w-5 h-5" /></div>
+                    <div className="text-left"><h4 className="font-bold text-white">Soy Barbero</h4><p className="text-xs text-zinc-400">Gestionar barbería y mis turnos</p></div>
                   </div>
                   <ArrowRight className="w-4 h-4 text-zinc-500 group-hover:translate-x-1 transition-transform" />
                 </Link>
 
-                {/* Salon Option */}
-                <Link
-                  to="/auth/business?type=salonera"
-                  onClick={() => setIsSheetOpen(false)}
-                  className="flex items-center justify-between p-5 rounded-2xl bg-white/5 border border-white/10 hover:border-white/20 transition-all group"
-                >
+                <Link to="/auth/business?type=salonera" onClick={onClose} className="flex items-center justify-between p-5 rounded-2xl bg-white/5 border border-white/10 hover:border-white/20 transition-all group">
                   <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-xl bg-pink-500/20 flex items-center justify-center text-pink-400">
-                      <Sparkles className="w-5 h-5" />
-                    </div>
-                    <div className="text-left">
-                      <h4 className="font-bold text-white">Soy Salón de Belleza</h4>
-                      <p className="text-xs text-zinc-400">Administrar salón y mi equipo</p>
-                    </div>
+                    <div className="w-10 h-10 rounded-xl bg-pink-500/20 flex items-center justify-center text-pink-400"><Sparkles className="w-5 h-5" /></div>
+                    <div className="text-left"><h4 className="font-bold text-white">Soy Salón de Belleza</h4><p className="text-xs text-zinc-400">Administrar salón y mi equipo</p></div>
                   </div>
                   <ArrowRight className="w-4 h-4 text-zinc-500 group-hover:translate-x-1 transition-transform" />
                 </Link>
               </div>
-              
-              <button
-                onClick={() => setIsSheetOpen(false)}
-                className="w-full mt-6 py-4 bg-zinc-800 text-zinc-300 font-bold text-xs uppercase tracking-widest rounded-xl hover:bg-zinc-700 transition-colors cursor-pointer"
-              >
+
+              <button onClick={onClose} className="w-full mt-6 py-4 bg-zinc-800 text-zinc-300 font-bold text-xs uppercase tracking-widest rounded-xl hover:bg-zinc-700 transition-colors cursor-pointer">
                 Cancelar
               </button>
             </motion.div>
-          </>
-        )}
-      </AnimatePresence>
-    </div>
+          </div>
+        </>
+      )}
+    </AnimatePresence>,
+    document.body
   );
 }
