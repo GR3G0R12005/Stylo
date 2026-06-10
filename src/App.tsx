@@ -8,9 +8,6 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { AuthProvider, useAuth } from './context/AuthContext';
 import InstallPrompt from './components/InstallPrompt';
 import Landing from './pages/Landing';
-import Login from './pages/Login';
-import Register from './pages/Register';
-import RoleSelection from './pages/RoleSelection';
 import AuthClient from './pages/AuthClient';
 import BusinessSelection from './pages/BusinessSelection';
 import AuthBusiness from './pages/AuthBusiness';
@@ -31,7 +28,16 @@ function ProtectedRoute({ children, allowedRoles }: { children: React.ReactNode,
   );
 
   // Allow either real user OR guest profile
-  if (!user && !profile) return <Navigate to="/login" />;
+  if (!user && !profile) {
+    const path = window.location.pathname;
+    if (path.startsWith('/barbero')) {
+      return <Navigate to="/auth/business?type=barbero" />;
+    }
+    if (path.startsWith('/salon')) {
+      return <Navigate to="/auth/business?type=salonera" />;
+    }
+    return <Navigate to="/auth/client" />;
+  }
 
   if (allowedRoles && profile && !allowedRoles.includes(profile.tipo)) {
     return <Navigate to="/" />;
@@ -80,12 +86,9 @@ export default function App() {
         <Router>
           <Routes>
             <Route path="/" element={<RoleHome />} />
-            <Route path="/login" element={<Login />} />
             <Route path="/auth/client" element={<AuthClient />} />
             <Route path="/business-selection" element={<BusinessSelection />} />
             <Route path="/auth/business" element={<AuthBusiness />} />
-            <Route path="/role-selection" element={<RoleSelection />} />
-            <Route path="/register" element={<Register />} />
 
             <Route path="/cliente" element={
               <ProtectedRoute allowedRoles={['cliente', 'barbero', 'salonera']}>
