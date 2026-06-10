@@ -11,7 +11,7 @@ registerSW({
     // The VitePWA autoUpdate strategy handles the refresh automatically
   },
   onOfflineReady() {
-    console.log('[STEYLOOK PWA] App lista para uso sin conexión.');
+    console.log('[STEYLOOK PWA] App lista para uso sin conexion.');
   },
   onRegistered(registration) {
     console.log('[STEYLOOK PWA] Service Worker registrado:', registration);

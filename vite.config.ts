@@ -6,6 +6,7 @@ import { VitePWA } from 'vite-plugin-pwa';
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, '.', '');
+  const isProd = mode === 'production';
   return {
     plugins: [
       react(),
@@ -14,7 +15,7 @@ export default defineConfig(({ mode }) => {
         registerType: 'autoUpdate',
         includeAssets: ['icons/*.png', 'favicon.ico'],
         devOptions: {
-          enabled: true,
+          enabled: false,
         },
         manifest: {
           name: 'STEYLOOK — Tu Estilo, Tu Mundo',
@@ -49,7 +50,7 @@ export default defineConfig(({ mode }) => {
           screenshots: [],
         },
         workbox: {
-          globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2,webp}'],
+          globPatterns: isProd ? ['**/*.{js,css,html,ico,png,svg,woff2,webp}'] : [],
           skipWaiting: true,
           clientsClaim: true,
           runtimeCaching: [
