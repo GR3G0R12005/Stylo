@@ -97,10 +97,10 @@ export default function AuthClient() {
           <motion.div className="mb-8 sm:mb-10">
             <p className="text-[10px] font-black uppercase tracking-[0.3em] text-blue-400 mb-2">STEYLOOK</p>
             <h2 className="text-2xl sm:text-3xl font-bold tracking-tighter mb-2">
-              {isLogin ? 'Bienvenido Cliente' : 'Crear Cuenta Cliente'}
+              {isLogin ? 'Bienvenido de nuevo' : 'Crea tu cuenta'}
             </h2>
             <p className="text-zinc-400 font-light text-sm">
-              {isLogin ? 'Accede para reservar servicios' : 'Regístrate y encuentra tu estilo'}
+              {isLogin ? 'Accede para reservar tus servicios favoritos' : 'Únete y encuentra tu estilo'}
             </p>
           </motion.div>
 
@@ -204,6 +204,15 @@ export default function AuthClient() {
           >
             {isLogin ? '¿No tienes cuenta? Crear una' : '¿Ya tienes cuenta? Inicia sesión'}
           </button>
+
+          <div className="mt-6 pt-6 border-t border-white/10 text-center">
+            <Link
+              to="/business-selection"
+              className="text-xs font-semibold text-zinc-500 hover:text-white transition-colors uppercase tracking-widest"
+            >
+              ¿Tienes un negocio? Inicia sesión aquí
+            </Link>
+          </div>
         </div>
       </motion.div>
     </div>

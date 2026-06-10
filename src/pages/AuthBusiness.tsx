@@ -241,6 +241,15 @@ export default function AuthBusiness() {
           >
             {isLogin ? '¿No tienes cuenta? Crear una' : '¿Ya tienes cuenta? Inicia sesión'}
           </button>
+
+          <div className="mt-6 pt-6 border-t border-white/10 text-center">
+            <Link
+              to="/auth/client"
+              className="text-xs font-semibold text-zinc-500 hover:text-white transition-colors uppercase tracking-widest"
+            >
+              ¿Eres un cliente? Inicia sesión aquí
+            </Link>
+          </div>
         </div>
       </motion.div>
     </div>

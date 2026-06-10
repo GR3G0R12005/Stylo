@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import { Link } from 'react-router-dom';
-import { Scissors, Search, Star, MapPin, ArrowRight, Sparkles, Menu, X, Calendar } from 'lucide-react';
+import { Scissors, Search, Star, MapPin, ArrowRight, Sparkles, Calendar, User } from 'lucide-react';
 
 const FEATURED_SPOTS = [
   { name: 'Stylo Original', type: 'Barbería', rating: '4.9', reviews: 128, img: 'https://images.unsplash.com/photo-1585747860715-2ba37e788b70?w=500&auto=format&fit=crop&q=60' },
@@ -10,7 +10,7 @@ const FEATURED_SPOTS = [
 ];
 
 export default function Landing() {
-  const [menuOpen, setMenuOpen] = useState(false);
+  const [isSheetOpen, setIsSheetOpen] = useState(false);
 
   return (
     <div className="min-h-screen bg-black text-white font-sans overflow-x-hidden selection:bg-zinc-800 selection:text-white">
@@ -30,35 +30,16 @@ export default function Landing() {
             <span className="text-2xl font-black tracking-[0.2em] uppercase">STEY<span className="text-barber-gold">LOOK</span></span>
           </div>
           
-          <div className="hidden md:flex items-center gap-8 text-[11px] font-black tracking-widest uppercase">
-            <a href="#descubrir" className="text-zinc-400 hover:text-white transition-colors">Descubrir</a>
-            <a href="#negocios" className="text-zinc-400 hover:text-white transition-colors">Para Negocios</a>
-            <Link to="/auth/client" className="text-zinc-400 hover:text-white transition-colors">Iniciar Sesión</Link>
-            <Link to="/auth/client" className="px-6 py-2.5 rounded-full bg-white text-black hover:scale-105 transition-transform">
-              Soy Cliente
-            </Link>
+          <div>
+            <button
+              onClick={() => setIsSheetOpen(true)}
+              className="px-6 py-2.5 rounded-full bg-white text-black font-black tracking-widest text-[11px] uppercase hover:scale-105 transition-transform"
+            >
+              Entrar
+            </button>
           </div>
-
-          <button className="md:hidden text-white" onClick={() => setMenuOpen(!menuOpen)}>
-            {menuOpen ? <X /> : <Menu />}
-          </button>
         </div>
       </nav>
-
-      {/* Mobile Menu */}
-      {menuOpen && (
-        <div className="fixed top-20 left-0 w-full bg-black/95 backdrop-blur-3xl border-b border-white/10 z-40 p-6 flex flex-col gap-6 text-sm font-bold uppercase tracking-widest text-center">
-          <a href="#descubrir" onClick={() => setMenuOpen(false)}>Descubrir</a>
-          <a href="#negocios" onClick={() => setMenuOpen(false)}>Para Negocios</a>
-          <Link to="/auth/client" onClick={() => setMenuOpen(false)}>Iniciar Sesión</Link>
-          <Link to="/auth/client" onClick={() => setMenuOpen(false)} className="py-3 bg-blue-500 text-white rounded-full">
-            Soy Cliente
-          </Link>
-          <Link to="/business-selection" onClick={() => setMenuOpen(false)} className="py-3 bg-amber-500 text-black rounded-full">
-            Soy Negocio
-          </Link>
-        </div>
-      )}
 
       {/* Hero Section */}
       <section className="relative pt-40 pb-20 px-6 max-w-7xl mx-auto flex flex-col items-center text-center">
@@ -89,14 +70,14 @@ export default function Landing() {
         
         <motion.div 
           initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.3 }}
-          className="flex flex-col sm:flex-row gap-4 w-full max-w-2xl"
+          className="flex flex-col sm:flex-row gap-4 w-full max-w-xs justify-center"
         >
-          <Link to="/auth/client" className="flex-1 px-8 py-4 bg-blue-500 text-white font-black uppercase tracking-widest text-xs rounded-2xl hover:scale-105 transition-transform flex items-center justify-center gap-2">
-            Soy Cliente
-          </Link>
-          <Link to="/business-selection" className="flex-1 px-8 py-4 bg-amber-500 text-black font-black uppercase tracking-widest text-xs rounded-2xl hover:scale-105 transition-transform flex items-center justify-center gap-2">
-            Soy Negocio
-          </Link>
+          <button
+            onClick={() => setIsSheetOpen(true)}
+            className="flex-1 px-8 py-4 bg-white text-black font-black uppercase tracking-widest text-xs rounded-2xl hover:scale-105 transition-transform flex items-center justify-center gap-2 shadow-xl shadow-white/5"
+          >
+            Comenzar <ArrowRight className="w-4 h-4" />
+          </button>
         </motion.div>
       </section>
 
@@ -107,9 +88,12 @@ export default function Landing() {
             <h2 className="text-3xl md:text-4xl font-black uppercase tracking-tight mb-2">Destacados esta semana</h2>
             <p className="text-zinc-400 font-medium">Los profesionales más valorados por nuestra comunidad.</p>
           </div>
-          <Link to="/auth/client" className="text-xs font-bold uppercase tracking-widest hover:text-zinc-300 flex items-center gap-2">
+          <button
+            onClick={() => setIsSheetOpen(true)}
+            className="text-xs font-bold uppercase tracking-widest hover:text-zinc-300 flex items-center gap-2 cursor-pointer bg-transparent border-none text-white"
+          >
             Ver Todos <ArrowRight className="w-4 h-4" />
-          </Link>
+          </button>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -131,9 +115,12 @@ export default function Landing() {
                 <h3 className="text-xl font-bold mb-4">{spot.name}</h3>
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-medium text-zinc-400">{spot.reviews} reseñas</span>
-                  <Link to="/auth/client" className="px-4 py-2 bg-white/10 rounded-full text-xs font-bold uppercase tracking-widest hover:bg-white text-white hover:text-black transition-colors">
+                  <button
+                    onClick={() => setIsSheetOpen(true)}
+                    className="px-4 py-2 bg-white/10 rounded-full text-xs font-bold uppercase tracking-widest hover:bg-white text-white hover:text-black transition-colors cursor-pointer"
+                  >
                     Reservar
-                  </Link>
+                  </button>
                 </div>
               </div>
             </motion.div>
@@ -182,9 +169,12 @@ export default function Landing() {
               <Link to="/business-selection" className="px-8 py-4 bg-white text-black font-black uppercase tracking-widest text-xs rounded-full hover:scale-105 transition-transform flex items-center justify-center gap-2">
                 Afiliar mi Negocio <ArrowRight className="w-4 h-4" />
               </Link>
-              <Link to="/business-selection" className="px-8 py-4 bg-transparent border border-white/20 text-white font-bold uppercase tracking-widest text-xs rounded-full hover:bg-white/5 transition-colors flex items-center justify-center">
+              <button
+                onClick={() => setIsSheetOpen(true)}
+                className="px-8 py-4 bg-transparent border border-white/20 text-white font-bold uppercase tracking-widest text-xs rounded-full hover:bg-white/5 transition-colors flex items-center justify-center cursor-pointer"
+              >
                 Iniciar Sesión (Negocio)
-              </Link>
+              </button>
             </div>
           </div>
           
@@ -217,6 +207,102 @@ export default function Landing() {
         </div>
         <p>© {new Date().getFullYear()} Steylook Global Group. Todos los derechos reservados.</p>
       </footer>
+
+      {/* Bottom Sheet for Role Selection */}
+      <AnimatePresence>
+        {isSheetOpen && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsSheetOpen(false)}
+              className="fixed inset-0 bg-black/70 backdrop-blur-md z-50 cursor-pointer"
+            />
+            
+            {/* Sheet */}
+            <motion.div
+              initial={{ y: "100%" }}
+              animate={{ y: 0 }}
+              exit={{ y: "100%" }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className="fixed bottom-0 left-0 right-0 w-full max-w-md mx-auto bg-zinc-900/95 border-t border-white/10 rounded-t-[2.5rem] p-8 z-50 shadow-2xl backdrop-blur-2xl"
+            >
+              {/* Handle */}
+              <div className="w-12 h-1 bg-zinc-700 rounded-full mx-auto mb-6" />
+              
+              <div className="text-center mb-8">
+                <h3 className="text-2xl font-black uppercase tracking-tight mb-2 text-white">Comenzar en Steylook</h3>
+                <p className="text-zinc-400 text-sm font-medium">Elige cómo quieres continuar</p>
+              </div>
+              
+              <div className="space-y-4">
+                {/* Cliente Option */}
+                <Link
+                  to="/auth/client"
+                  onClick={() => setIsSheetOpen(false)}
+                  className="flex items-center justify-between p-5 rounded-2xl bg-white/5 border border-white/10 hover:border-white/20 transition-all group"
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 rounded-xl bg-blue-500/20 flex items-center justify-center text-blue-400">
+                      <User className="w-5 h-5" />
+                    </div>
+                    <div className="text-left">
+                      <h4 className="font-bold text-white">Soy Cliente</h4>
+                      <p className="text-xs text-zinc-400">Buscar servicios y reservar citas</p>
+                    </div>
+                  </div>
+                  <ArrowRight className="w-4 h-4 text-zinc-500 group-hover:translate-x-1 transition-transform" />
+                </Link>
+
+                {/* Barbero Option */}
+                <Link
+                  to="/auth/business?type=barbero"
+                  onClick={() => setIsSheetOpen(false)}
+                  className="flex items-center justify-between p-5 rounded-2xl bg-white/5 border border-white/10 hover:border-white/20 transition-all group"
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center text-amber-400">
+                      <Scissors className="w-5 h-5" />
+                    </div>
+                    <div className="text-left">
+                      <h4 className="font-bold text-white">Soy Barbero</h4>
+                      <p className="text-xs text-zinc-400">Gestionar barbería y mis turnos</p>
+                    </div>
+                  </div>
+                  <ArrowRight className="w-4 h-4 text-zinc-500 group-hover:translate-x-1 transition-transform" />
+                </Link>
+
+                {/* Salon Option */}
+                <Link
+                  to="/auth/business?type=salonera"
+                  onClick={() => setIsSheetOpen(false)}
+                  className="flex items-center justify-between p-5 rounded-2xl bg-white/5 border border-white/10 hover:border-white/20 transition-all group"
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 rounded-xl bg-pink-500/20 flex items-center justify-center text-pink-400">
+                      <Sparkles className="w-5 h-5" />
+                    </div>
+                    <div className="text-left">
+                      <h4 className="font-bold text-white">Soy Salón de Belleza</h4>
+                      <p className="text-xs text-zinc-400">Administrar salón y mi equipo</p>
+                    </div>
+                  </div>
+                  <ArrowRight className="w-4 h-4 text-zinc-500 group-hover:translate-x-1 transition-transform" />
+                </Link>
+              </div>
+              
+              <button
+                onClick={() => setIsSheetOpen(false)}
+                className="w-full mt-6 py-4 bg-zinc-800 text-zinc-300 font-bold text-xs uppercase tracking-widest rounded-xl hover:bg-zinc-700 transition-colors cursor-pointer"
+              >
+                Cancelar
+              </button>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
