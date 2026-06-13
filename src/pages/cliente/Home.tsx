@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAuth } from '../../context/AuthContext';
 import { db, handleFirestoreError, OperationType, auth } from '../../lib/firebase';
-import { collection, query, addDoc, serverTimestamp, where, orderBy, onSnapshot } from 'firebase/firestore';
+import { collection, query, addDoc, serverTimestamp, where, orderBy, onSnapshot, doc, updateDoc } from 'firebase/firestore';
 import { Search, Calendar, Clock, MapPin, Star, User, LogOut, CheckCircle2, ChevronRight, X, ArrowLeft, MessageSquare, Bell, SlidersHorizontal, DollarSign, Moon, Sun, Phone, AlertCircle } from 'lucide-react';
 import { cn, formatCurrency } from '../../lib/utils';
 import { format } from 'date-fns';
@@ -32,6 +32,7 @@ export default function ClienteHome() {
   const [loading, setLoading] = useState(true);
   const [bookingStatus, setBookingStatus] = useState<'idle' | 'success'>('idle');
   const [showReviewForm, setShowReviewForm] = useState<string | null>(null); // appointmentId
+  const [selectedApptDetails, setSelectedApptDetails] = useState<Appointment | null>(null);
   const [activeChat, setActiveChat] = useState<{ id: string, name: string } | null>(null);
   const [notification, setNotification] = useState<string | null>(null);
   const [showFilters, setShowFilters] = useState(false);
@@ -275,6 +276,35 @@ export default function ClienteHome() {
     }, 3000);
   };
 
+  const handleCancelAppointment = async (apptId: string) => {
+    // 1. Update local state & local storage for instant feedback
+    const updated = appointments.map((appt) => {
+      if (appt.id === apptId) {
+        return { ...appt, status: 'cancelled' as const };
+      }
+      return appt;
+    });
+    setAppointments(updated);
+    saveLocalAppointments(updated);
+
+    // 2. Update Firestore if not a local mock ID
+    if (!apptId.startsWith('local-')) {
+      try {
+        const apptRef = doc(db, 'appointments', apptId);
+        await updateDoc(apptRef, { status: 'cancelled' });
+        setNotification("❌ Tu cita fue cancelada.");
+        setTimeout(() => setNotification(null), 5000);
+      } catch (err) {
+        console.error("Error al cancelar la cita en Firestore:", err);
+        setNotification("⚠️ Error al cancelar la cita en el servidor.");
+        setTimeout(() => setNotification(null), 5000);
+      }
+    } else {
+      setNotification("❌ Tu cita fue cancelada.");
+      setTimeout(() => setNotification(null), 5000);
+    }
+  };
+
   const resetHome = () => {
     setActiveTab('home');
     setSelectedShop(null);
@@ -389,11 +419,18 @@ export default function ClienteHome() {
             return (
               <div className="space-y-4">
                 {filteredAppts.map((app) => (
-                  <motion.div key={app.id} layout initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="p-5 sm:p-8 rounded-[1.75rem] sm:rounded-[2.5rem] bg-white dark:bg-zinc-900 border border-theme-secondary/10 shadow-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                  <motion.div
+                    key={app.id}
+                    layout
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    onClick={() => setSelectedApptDetails(app)}
+                    className="p-5 sm:p-8 rounded-[1.75rem] sm:rounded-[2.5rem] bg-white dark:bg-zinc-900 border border-theme-secondary/10 shadow-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 cursor-pointer hover:shadow-md transition-shadow group"
+                  >
                     <div className="flex items-center gap-4 sm:gap-6 min-w-0">
-                      <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-zinc-50 dark:bg-zinc-800 flex items-center justify-center text-2xl sm:text-3xl shrink-0">{app.shopName.toLowerCase().includes('barber') ? '💈' : '✂️'}</div>
+                      <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-zinc-50 dark:bg-zinc-800 flex items-center justify-center text-2xl sm:text-3xl shrink-0 group-hover:scale-105 transition-transform">{app.shopName.toLowerCase().includes('barber') ? '💈' : '✂️'}</div>
                       <div className="min-w-0">
-                        <h4 className="font-black text-lg sm:text-xl text-zinc-900 dark:text-white truncate">{app.shopName}</h4>
+                        <h4 className="font-black text-lg sm:text-xl text-zinc-900 dark:text-white truncate group-hover:text-theme-primary transition-colors">{app.shopName}</h4>
                         <p className="text-sm text-theme-secondary font-bold flex items-center gap-2 mt-1"><Calendar className="w-4 h-4 shrink-0" />{format(new Date(app.date), 'EEEE d MMMM', { locale: es })}</p>
                         {app.serviceName && <p className="text-xs text-zinc-400 mt-1 truncate">{app.serviceName}</p>}
                       </div>
@@ -407,7 +444,18 @@ export default function ClienteHome() {
                       )}>
                         {app.status === 'pending' ? 'Pendiente' : app.status === 'completed' ? 'Completada' : app.status === 'cancelled' ? 'Cancelada' : 'Confirmada'}
                       </div>
-                      {app.status === 'completed' && <button type="button" onClick={() => setShowReviewForm(app.id)} className="text-[10px] font-black uppercase tracking-widest text-theme-primary">Valorar</button>}
+                      {app.status === 'completed' && (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setShowReviewForm(app.id);
+                          }}
+                          className="text-[10px] font-black uppercase tracking-widest text-theme-primary cursor-pointer hover:underline"
+                        >
+                          Valorar
+                        </button>
+                      )}
                     </div>
                   </motion.div>
                 ))}
@@ -473,19 +521,23 @@ export default function ClienteHome() {
             <h3 className="text-xs font-black uppercase text-theme-secondary tracking-[0.3em] mb-4 sm:mb-6">Mis Próximas Citas</h3>
             <div className="space-y-3 sm:space-y-4">
               {appointments.filter(a => a.status !== 'completed' && a.status !== 'cancelled').map(app => (
-                <div key={app.id} className="p-4 sm:p-5 md:p-8 rounded-[1.5rem] sm:rounded-[1.75rem] md:rounded-[2.5rem] bg-white dark:bg-zinc-900 border border-theme-secondary/10 shadow-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 group hover:shadow-xl transition-all">
+                <div
+                  key={app.id}
+                  onClick={() => setSelectedApptDetails(app)}
+                  className="p-4 sm:p-5 md:p-8 rounded-[1.5rem] sm:rounded-[1.75rem] md:rounded-[2.5rem] bg-white dark:bg-zinc-900 border border-theme-secondary/10 shadow-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 group hover:shadow-xl transition-all cursor-pointer"
+                >
                   <div className="flex items-center gap-3 sm:gap-4 md:gap-6">
                     <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-[1rem] sm:rounded-[1.25rem] md:rounded-[1.5rem] bg-zinc-50 flex items-center justify-center text-2xl sm:text-3xl shadow-inner group-hover:scale-110 transition-transform shrink-0">
                       {app.shopName.includes('Barber') ? '💈' : '✂️'}
                     </div>
                     <div className="min-w-0">
-                      <h4 className="font-black text-base sm:text-lg md:text-xl text-zinc-900 mb-1 truncate">{app.shopName}</h4>
+                      <h4 className="font-black text-base sm:text-lg md:text-xl text-zinc-900 dark:text-white mb-1 truncate group-hover:text-theme-primary transition-colors">{app.shopName}</h4>
                       <p className="text-xs sm:text-sm text-theme-secondary font-bold flex items-center gap-1.5 sm:gap-2">
                         <Calendar className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" /> {format(new Date(app.date), 'EEEE d MMMM', { locale: es })}
                       </p>
                     </div>
                   </div>
-                  <div className="text-right">
+                  <div className="text-right flex flex-col items-end justify-center">
                     <div className="text-xl sm:text-2xl font-black text-theme-primary mb-1">{app.time || '10:00'}</div>
                     <div className="px-2.5 sm:px-3 py-1 rounded-full bg-theme-secondary/10 text-theme-secondary text-[9px] sm:text-[10px] font-black uppercase tracking-widest">
                       {app.status === 'pending' ? 'Pendiente' : 'Confirmada'}
@@ -944,6 +996,126 @@ export default function ClienteHome() {
                   setTimeout(() => setNotification(null), 5000);
                 }}
               />
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Appointment Details Modal */}
+      <AnimatePresence>
+        {selectedApptDetails && (
+          <div
+            className="fixed inset-0 z-50 bg-zinc-950/40 backdrop-blur-md flex items-center justify-center p-4 sm:p-6"
+            onClick={(e) => {
+              if (e.target === e.currentTarget) setSelectedApptDetails(null);
+            }}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+              className="bg-white dark:bg-zinc-900 border border-theme-secondary/10 w-full max-w-md rounded-[2.5rem] shadow-2xl overflow-hidden relative text-theme-text flex flex-col p-6 sm:p-8"
+            >
+              {/* Close Button */}
+              <button
+                onClick={() => setSelectedApptDetails(null)}
+                className="absolute top-4 right-4 p-2 bg-theme-secondary/10 rounded-full hover:bg-theme-secondary/20 transition-colors z-10 cursor-pointer"
+              >
+                <X className="w-5 h-5 text-zinc-900 dark:text-white" />
+              </button>
+
+              {/* Icon / Avatar */}
+              <div className="flex flex-col items-center text-center mt-4 mb-6">
+                <div className="w-20 h-20 rounded-3xl bg-zinc-50 dark:bg-zinc-800 flex items-center justify-center text-4xl shadow-inner mb-4">
+                  {selectedApptDetails.shopName.toLowerCase().includes('barber') ? '💈' : '✂️'}
+                </div>
+                <h3 className="text-2xl font-black tracking-tight text-zinc-900 dark:text-white leading-tight">
+                  {selectedApptDetails.shopName}
+                </h3>
+                <div className="mt-2">
+                  <span className={cn('px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest',
+                    selectedApptDetails.status === 'cancelled' ? 'bg-red-100 text-red-600 dark:bg-red-950/40 dark:text-red-400' :
+                    selectedApptDetails.status === 'completed' ? 'bg-green-100 text-green-700 dark:bg-green-950/40 dark:text-green-400' :
+                    'bg-theme-secondary/10 text-theme-secondary'
+                  )}>
+                    {selectedApptDetails.status === 'pending' ? 'Pendiente' : selectedApptDetails.status === 'completed' ? 'Completada' : selectedApptDetails.status === 'cancelled' ? 'Cancelada' : 'Confirmada'}
+                  </span>
+                </div>
+              </div>
+
+              {/* Details List */}
+              <div className="space-y-5 flex-1 py-2 border-t border-b border-theme-secondary/10 my-2">
+                <div>
+                  <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-theme-secondary mb-2">Servicios Reservados</h4>
+                  <div className="bg-zinc-50 dark:bg-zinc-800/40 rounded-2xl p-4 border border-theme-secondary/5">
+                    <p className="font-bold text-sm text-zinc-900 dark:text-white leading-relaxed">
+                      {selectedApptDetails.serviceName || 'Servicio General'}
+                    </p>
+                    <div className="mt-3 pt-3 border-t border-theme-secondary/5 flex justify-between items-center">
+                      <span className="text-xs text-zinc-400 font-medium">Total</span>
+                      <span className="text-lg font-black text-green-500">{formatCurrency(selectedApptDetails.price)}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-zinc-50 dark:bg-zinc-800/40 rounded-2xl p-4 border border-theme-secondary/5 flex flex-col items-center text-center">
+                    <Calendar className="w-5 h-5 text-theme-primary mb-2" />
+                    <span className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Fecha</span>
+                    <span className="text-xs font-bold text-zinc-800 dark:text-white mt-1 capitalize leading-tight">
+                      {format(new Date(selectedApptDetails.date), 'eee d MMM', { locale: es })}
+                    </span>
+                  </div>
+
+                  <div className="bg-zinc-50 dark:bg-zinc-800/40 rounded-2xl p-4 border border-theme-secondary/5 flex flex-col items-center text-center">
+                    <Clock className="w-5 h-5 text-theme-primary mb-2" />
+                    <span className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Hora</span>
+                    <span className="text-xs font-bold text-zinc-800 dark:text-white mt-1">
+                      {selectedApptDetails.time || '10:00'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div className="mt-6 space-y-3 shrink-0">
+                {(selectedApptDetails.status === 'pending' || selectedApptDetails.status === 'confirmed') && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (window.confirm('¿Estás seguro de que deseas cancelar esta cita?')) {
+                        handleCancelAppointment(selectedApptDetails.id);
+                        setSelectedApptDetails(null);
+                      }
+                    }}
+                    className="w-full py-4 rounded-2xl bg-red-500 hover:bg-red-600 text-white font-black text-sm uppercase tracking-widest shadow-lg shadow-red-200 dark:shadow-none transition-all active:scale-[0.98] cursor-pointer"
+                  >
+                    Cancelar Cita
+                  </button>
+                )}
+
+                {selectedApptDetails.status === 'completed' && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowReviewForm(selectedApptDetails.id);
+                      setSelectedApptDetails(null);
+                    }}
+                    className="w-full py-4 rounded-2xl bg-theme-primary hover:opacity-90 text-white font-black text-sm uppercase tracking-widest transition-all active:scale-[0.98] cursor-pointer"
+                  >
+                    Dejar Valoración
+                  </button>
+                )}
+
+                <button
+                  type="button"
+                  onClick={() => setSelectedApptDetails(null)}
+                  className="w-full py-3.5 rounded-2xl border border-theme-secondary/20 hover:bg-theme-secondary/5 text-zinc-500 dark:text-zinc-400 font-black text-xs uppercase tracking-widest transition-colors cursor-pointer"
+                >
+                  Cerrar
+                </button>
+              </div>
             </motion.div>
           </div>
         )}
