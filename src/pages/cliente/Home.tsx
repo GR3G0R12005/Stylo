@@ -25,7 +25,8 @@ export default function ClienteHome() {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [selectedShop, setSelectedShop] = useState<Shop | null>(null);
   const [services, setServices] = useState<Service[]>([]);
-  const [selectedService, setSelectedService] = useState<Service | null>(null);
+  const [selectedServices, setSelectedServices] = useState<Service[]>([]);
+  const [isSelectingTime, setIsSelectingTime] = useState(false);
   const [bookingDate, setBookingDate] = useState<Date | null>(null);
   const [bookingTime, setBookingTime] = useState<string>('');
   const [loading, setLoading] = useState(true);
@@ -163,6 +164,10 @@ export default function ClienteHome() {
 
   const handleSelectShop = async (shop: any) => {
     setSelectedShop(shop);
+    setSelectedServices([]);
+    setIsSelectingTime(false);
+    setBookingDate(null);
+    setBookingTime('');
     if (shop.services && shop.services.length > 0) {
       setServices(shop.services.filter((s: any) => s.active !== false));
     } else {
@@ -192,8 +197,12 @@ export default function ClienteHome() {
   };
 
   const handleBooking = async () => {
-    if (!selectedShop || !selectedService || !bookingDate || !bookingTime || !profile) return;
+    if (!selectedShop || selectedServices.length === 0 || !bookingDate || !bookingTime || !profile) return;
     
+    const serviceIds = selectedServices.map(s => s.id).join(',');
+    const serviceNames = selectedServices.map(s => s.name).join(', ');
+    const totalPrice = selectedServices.reduce((sum, s) => sum + s.price, 0);
+
     const appointmentsPath = 'appointments';
     const newAppt: Appointment = {
       id: `local-${Date.now()}`,
@@ -202,11 +211,11 @@ export default function ClienteHome() {
       providerId: selectedShop.id,
       shopId: selectedShop.id,
       shopName: selectedShop.name,
-      serviceId: selectedService.id,
-      serviceName: selectedService.name,
+      serviceId: serviceIds,
+      serviceName: serviceNames,
       date: bookingDate.toISOString(),
       status: 'pending',
-      price: selectedService.price,
+      price: totalPrice,
       createdAt: new Date().toISOString(),
     };
 
@@ -217,12 +226,12 @@ export default function ClienteHome() {
           clientName: profile.nombre,
           shopId: selectedShop.id,
           shopName: selectedShop.name,
-          serviceId: selectedService.id,
-          serviceName: selectedService.name,
+          serviceId: serviceIds,
+          serviceName: serviceNames,
           date: bookingDate.toISOString(),
           time: bookingTime,
           status: 'pending',
-          price: selectedService.price,
+          price: totalPrice,
           createdAt: serverTimestamp(),
         });
       }
@@ -237,7 +246,8 @@ export default function ClienteHome() {
     setTimeout(() => {
       setBookingStatus('idle');
       setSelectedShop(null);
-      setSelectedService(null);
+      setSelectedServices([]);
+      setIsSelectingTime(false);
       setBookingDate(null);
       setBookingTime('');
     }, 3000);
@@ -246,7 +256,8 @@ export default function ClienteHome() {
   const resetHome = () => {
     setActiveTab('home');
     setSelectedShop(null);
-    setSelectedService(null);
+    setSelectedServices([]);
+    setIsSelectingTime(false);
     setBookingDate(null);
     setBookingTime('');
     setFilters({
@@ -574,229 +585,263 @@ export default function ClienteHome() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-50 bg-zinc-950/40 backdrop-blur-md flex items-end sm:items-center justify-center sm:p-4 md:p-6"
+            onClick={(e) => { if (e.target === e.currentTarget) { setSelectedShop(null); setSelectedServices([]); setIsSelectingTime(false); setBookingDate(null); setBookingTime(''); }}}
           >
             <motion.div
               initial={{ y: '100%', scale: 1 }}
               animate={{ y: 0, scale: 1 }}
               exit={{ y: '100%', scale: 0.9 }}
               transition={{ type: 'spring', stiffness: 260, damping: 28 }}
-              className="bg-theme-bg w-full max-w-2xl rounded-t-[2rem] sm:rounded-[3rem] p-5 sm:p-6 md:p-10 max-h-[90vh] overflow-y-auto shadow-2xl relative text-theme-text"
+              className="bg-theme-bg w-full max-w-2xl rounded-t-[2rem] sm:rounded-[2.5rem] max-h-[85vh] shadow-2xl relative text-theme-text flex flex-col"
             >
-              <button
-                onClick={() => {
-                  setSelectedShop(null);
-                  setSelectedService(null);
-                  setBookingDate(null);
-                  setBookingTime('');
-                }}
-                className="absolute top-4 right-4 sm:top-6 sm:right-6 md:top-8 md:right-8 p-2.5 sm:p-3 md:p-4 bg-theme-secondary/10 rounded-full hover:bg-theme-secondary/20 transition-colors z-10"
-              >
-                <X className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" />
-              </button>
-
-              <div className="mb-6 sm:mb-8 md:mb-10">
-                <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 mb-4">
-                  <h3 className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tight">{selectedShop.name}</h3>
+              {/* Fixed Header */}
+              <div className="p-4 sm:p-5 md:p-6 pb-3 sm:pb-4 shrink-0 border-b border-theme-secondary/10">
+                <button
+                  onClick={() => {
+                    setSelectedShop(null);
+                    setSelectedServices([]);
+                    setIsSelectingTime(false);
+                    setBookingDate(null);
+                    setBookingTime('');
+                  }}
+                  className="absolute top-3 right-3 sm:top-4 sm:right-4 p-2 sm:p-2.5 bg-theme-secondary/10 rounded-full hover:bg-theme-secondary/20 transition-colors z-10"
+                >
+                  <X className="w-4 h-4 sm:w-5 sm:h-5" />
+                </button>
+                <div className="flex items-center gap-3 mb-2 pr-10">
+                  <h3 className="text-xl sm:text-2xl font-black tracking-tight truncate">{selectedShop.name}</h3>
                   <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      startChat(selectedShop);
-                    }}
-                    className="p-2 sm:p-3 bg-theme-primary/10 text-theme-primary rounded-xl sm:rounded-2xl hover:bg-theme-primary hover:text-white transition-all flex items-center gap-2 font-black text-[10px] sm:text-xs uppercase tracking-widest self-start sm:self-center"
+                    onClick={(e) => { e.stopPropagation(); startChat(selectedShop); }}
+                    className="p-1.5 sm:p-2 bg-theme-primary/10 text-theme-primary rounded-lg hover:bg-theme-primary hover:text-white transition-all shrink-0"
                   >
-                    <MessageSquare className="w-4 h-4" /> Chat
+                    <MessageSquare className="w-4 h-4" />
                   </button>
                 </div>
-                <div className="flex flex-col gap-2">
-                  <div className="flex items-center gap-2 text-theme-text/60 font-medium text-sm">
-                    <MapPin className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> {selectedShop.address}
-                  </div>
-                  {selectedShop.phone && (
-                    <div className="flex items-center gap-2 text-theme-text/60 font-medium text-sm">
-                      <Phone className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> {selectedShop.phone}
-                    </div>
-                  )}
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-theme-text/50 text-xs font-medium">
+                  <span className="flex items-center gap-1"><MapPin className="w-3 h-3" /> {selectedShop.address}</span>
+                  {selectedShop.phone && <span className="flex items-center gap-1"><Phone className="w-3 h-3" /> {selectedShop.phone}</span>}
                 </div>
               </div>
 
-              {/* Promociones / Ofertas especiales del negocio */}
-              {(selectedShop as any).promos && (selectedShop as any).promos.filter((p: any) => p.status === 'active').length > 0 && (
-                <div className="mb-6 sm:mb-8 md:mb-10 animate-in fade-in slide-in-from-bottom-2">
-                  <h4 className="text-[10px] sm:text-xs font-black uppercase tracking-[0.3em] text-theme-text/60 mb-3 sm:mb-4">Ofertas Disponibles</h4>
-                  <div className="flex flex-col gap-2 sm:gap-3">
-                    {(selectedShop as any).promos.filter((p: any) => p.status === 'active').map((promo: any) => (
-                      <div
-                        key={promo.id}
-                        className="p-3 sm:p-4 md:p-5 rounded-2xl sm:rounded-3xl bg-amber-500/5 dark:bg-amber-500/[0.03] border border-amber-500/20 text-theme-text flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4"
-                      >
-                        <div className="flex items-center gap-3 sm:gap-4">
-                          <span className="bg-amber-500 text-black text-[9px] px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg sm:rounded-xl font-black uppercase tracking-wider shrink-0 shadow-sm">
-                            OFERTA
-                          </span>
-                          <div>
-                            <p className="font-black text-sm sm:text-base leading-tight text-zinc-900 dark:text-white">{promo.title}</p>
-                            <p className="text-xs text-theme-text/60 mt-1">Vence el {format(new Date(promo.expires), 'd MMM', { locale: es })}</p>
+              {/* Scrollable Content */}
+              <div className="overflow-y-auto flex-1 p-4 sm:p-5 md:p-6 pt-3 sm:pt-4">
+                {/* Promociones */}
+                {(selectedShop as any).promos && (selectedShop as any).promos.filter((p: any) => p.status === 'active').length > 0 && (
+                  <div className="mb-4">
+                    <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-theme-text/50 mb-2">Ofertas</h4>
+                    <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+                      {(selectedShop as any).promos.filter((p: any) => p.status === 'active').map((promo: any) => (
+                        <div key={promo.id} className="min-w-[200px] p-3 rounded-xl bg-amber-500/5 border border-amber-500/20 text-theme-text shrink-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="bg-amber-500 text-black text-[8px] px-1.5 py-0.5 rounded font-black uppercase">OFERTA</span>
+                            <span className="text-sm font-black text-amber-500">{promo.discount}</span>
                           </div>
+                          <p className="font-bold text-xs leading-tight text-zinc-900 dark:text-white">{promo.title}</p>
                         </div>
-                        <div className="text-right shrink-0">
-                          <p className="text-base sm:text-lg font-black text-amber-500">{promo.discount}</p>
-                          <p className="text-[10px] font-mono font-bold bg-amber-500/10 px-2 py-0.5 rounded-lg text-amber-500 inline-block mt-1">
-                            {promo.code}
-                          </p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Works Carousel */}
-              <div className="mb-6 sm:mb-8 md:mb-10">
-                <h4 className="text-[10px] sm:text-xs font-black uppercase tracking-[0.3em] text-theme-text/60 mb-4 sm:mb-6">Nuestros Trabajos</h4>
-                <WorkCarousel type={selectedShop.type} />
-              </div>
-
-              {!selectedService ? (
-                <div className="space-y-8 sm:space-y-12">
-                  <div className="space-y-4 sm:space-y-6">
-                    <h4 className="text-[10px] sm:text-xs font-black uppercase tracking-[0.3em] text-theme-text/60 mb-3 sm:mb-4">Selecciona un Servicio</h4>
-                    <div className="grid grid-cols-1 gap-3 sm:gap-4">
-                      {services.map(service => (
-                        <button
-                          key={service.id}
-                          onClick={() => setSelectedService(service)}
-                          className="w-full flex items-center justify-between p-4 sm:p-5 md:p-7 rounded-[1.5rem] sm:rounded-[2rem] bg-theme-secondary/10 hover:bg-theme-secondary/20 transition-all border-2 border-transparent hover:border-theme-secondary/30 text-left group"
-                        >
-                          <div className="flex-1 min-w-0">
-                            <div className="font-black text-base sm:text-lg md:text-xl mb-1 group-hover:text-theme-primary transition-colors truncate">{service.name}</div>
-                            <div className="text-theme-text/60 text-xs sm:text-sm font-bold flex items-center gap-1.5 sm:gap-2">
-                              <Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" /> {service.duration} minutos
-                            </div>
-                          </div>
-                          <div className="text-right shrink-0">
-                            <div className="text-xl sm:text-2xl font-black text-theme-primary">{formatCurrency(service.price)}</div>
-                            <div className="text-[9px] sm:text-[10px] font-black text-theme-primary uppercase tracking-[0.2em] opacity-0 group-hover:opacity-100 transition-all translate-y-2 group-hover:translate-y-0">Reservar</div>
-                          </div>
-                        </button>
                       ))}
                     </div>
                   </div>
+                )}
 
-                  <div className="space-y-4 sm:space-y-6">
-                    <h4 className="text-[10px] sm:text-xs font-black uppercase tracking-[0.3em] text-theme-text/60 mb-3 sm:mb-4">Reseñas de Clientes</h4>
-                    <ReviewList shopId={selectedShop.id} />
-                  </div>
+                {/* Works Carousel */}
+                <div className="mb-4">
+                  <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-theme-text/50 mb-2">Nuestros Trabajos</h4>
+                  <WorkCarousel type={selectedShop.type} />
                 </div>
-              ) : !bookingDate ? (
-                <div className="space-y-6 sm:space-y-8 animate-in fade-in slide-in-from-bottom-4">
-                  <button onClick={() => setSelectedService(null)} className="inline-flex items-center gap-2 px-4 sm:px-6 py-2 rounded-full bg-theme-secondary/10 text-theme-text/70 text-[10px] sm:text-xs font-black uppercase tracking-widest hover:bg-theme-secondary/20 transition-colors">
-                    <ArrowLeft className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> <span className="truncate max-w-[200px]">{selectedService.name}</span>
-                  </button>
-                  <h4 className="text-[10px] sm:text-xs font-black uppercase tracking-[0.3em] text-theme-text/60">Selecciona fecha</h4>
-                  <GoogleCalendar 
-                    selectedDate={bookingDate}
-                    onDateSelect={(date) => setBookingDate(date)}
-                  />
-                </div>
-              ) : (
-                <div className="space-y-8 sm:space-y-10 animate-in fade-in slide-in-from-bottom-4">
-                   <div className="flex items-center justify-between">
-                    <button onClick={() => setBookingDate(null)} className="inline-flex items-center gap-2 px-4 sm:px-6 py-2 rounded-full bg-theme-secondary/10 text-theme-text/70 text-[10px] sm:text-xs font-black uppercase tracking-widest hover:bg-theme-secondary/20 transition-colors">
-                      <Calendar className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> {format(bookingDate, 'd MMMM', { locale: es })}
+
+                {!isSelectingTime ? (
+                  <>
+                    {/* Services Selection */}
+                    <div className="mb-4">
+                      <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-theme-text/50 mb-2">Selecciona Servicios</h4>
+                      <div className="space-y-2">
+                        {services.map(service => {
+                          const isSelected = selectedServices.some(s => s.id === service.id);
+                          return (
+                            <button
+                              key={service.id}
+                              onClick={() => {
+                                if (isSelected) {
+                                  setSelectedServices(prev => prev.filter(s => s.id !== service.id));
+                                } else {
+                                  setSelectedServices(prev => [...prev, service]);
+                                }
+                              }}
+                              className={cn(
+                                "w-full flex items-center gap-3 p-3 rounded-xl transition-all border-2 text-left",
+                                isSelected
+                                  ? "border-green-500 bg-green-500/10"
+                                  : "border-transparent bg-theme-secondary/5 hover:bg-theme-secondary/10"
+                              )}
+                            >
+                              {/* Checkbox circle */}
+                              <div className={cn(
+                                "w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-all",
+                                isSelected ? "border-green-500 bg-green-500" : "border-theme-secondary/30"
+                              )}>
+                                {isSelected && <CheckCircle2 className="w-3.5 h-3.5 text-white" />}
+                              </div>
+                              {/* Info */}
+                              <div className="flex-1 min-w-0">
+                                <div className={cn("font-bold text-sm truncate transition-colors", isSelected ? "text-green-500" : "text-theme-text")}>{service.name}</div>
+                                <div className="text-theme-text/50 text-[10px] font-medium flex items-center gap-1">
+                                  <Clock className="w-2.5 h-2.5" /> {service.duration} min
+                                </div>
+                              </div>
+                              {/* Price */}
+                              <div className={cn("text-base font-black shrink-0 transition-colors", isSelected ? "text-green-500" : "text-theme-text")}>{formatCurrency(service.price)}</div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Reviews */}
+                    <div>
+                      <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-theme-text/50 mb-2">Reseñas</h4>
+                      <ReviewList shopId={selectedShop.id} />
+                    </div>
+
+                    {/* Spacer for the green bubble */}
+                    {selectedServices.length > 0 && <div className="h-20" />}
+                  </>
+                ) : !bookingDate ? (
+                  <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4">
+                    <button onClick={() => setIsSelectingTime(false)} className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-theme-secondary/10 text-theme-text/70 text-[10px] font-black uppercase tracking-widest hover:bg-theme-secondary/20 transition-colors">
+                      <ArrowLeft className="w-3.5 h-3.5" /> Atrás
                     </button>
-                    <div className="text-right">
-                      <p className="text-[10px] font-black text-theme-text/60 uppercase tracking-widest">Resumen</p>
-                      <p className="font-black text-lg text-theme-text">{selectedService.name}</p>
+                    <div className="p-3 rounded-xl bg-green-500/10 border border-green-500/20">
+                      <p className="text-[10px] font-black uppercase tracking-widest text-green-600 dark:text-green-400 mb-1">{selectedServices.length} {selectedServices.length === 1 ? 'Servicio seleccionado' : 'Servicios seleccionados'}</p>
+                      <p className="text-xs text-theme-text/70">{selectedServices.map(s => s.name).join(' • ')}</p>
+                      <p className="text-lg font-black text-green-500 mt-1">{formatCurrency(selectedServices.reduce((sum, s) => sum + s.price, 0))}</p>
+                    </div>
+                    <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-theme-text/50">Selecciona fecha</h4>
+                    <GoogleCalendar
+                      selectedDate={bookingDate}
+                      onDateSelect={(date) => setBookingDate(date)}
+                    />
+                  </div>
+                ) : (
+                  <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4">
+                    <div className="flex items-center justify-between">
+                      <button onClick={() => setBookingDate(null)} className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-theme-secondary/10 text-theme-text/70 text-[10px] font-black uppercase tracking-widest hover:bg-theme-secondary/20 transition-colors">
+                        <Calendar className="w-3.5 h-3.5" /> {format(bookingDate, 'd MMM', { locale: es })}
+                      </button>
+                      <div className="text-right">
+                        <p className="text-[10px] font-black text-theme-text/50 uppercase tracking-widest">Total</p>
+                        <p className="font-black text-base text-green-500">{formatCurrency(selectedServices.reduce((sum, s) => sum + s.price, 0))}</p>
+                      </div>
+                    </div>
+
+                    <div className="space-y-3">
+                      <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-theme-text/50">Horarios Disponibles</h4>
+
+                      {(() => {
+                        const allSlots: Record<'mañana' | 'tarde' | 'noche', { time: string; taken?: boolean }[]> = {
+                          mañana: [
+                            { time: '09:00' },
+                            { time: '10:00' },
+                            { time: '11:00' },
+                            { time: '12:00', taken: true },
+                          ],
+                          tarde: [
+                            { time: '13:00' },
+                            { time: '14:00', taken: true },
+                            { time: '15:00' },
+                            { time: '16:00' },
+                          ],
+                          noche: [
+                            { time: '17:00' },
+                            { time: '18:00', taken: true },
+                            { time: '19:00' },
+                            { time: '20:00' },
+                          ],
+                        };
+                        const tabLabels: ('mañana' | 'tarde' | 'noche')[] = ['mañana', 'tarde', 'noche'];
+                        const tabIcons: Record<string, string> = { mañana: '🌤', tarde: '🌇', noche: '🌙' };
+                        return (
+                          <>
+                            <div className="flex gap-1.5 p-1 bg-theme-secondary/10 rounded-xl">
+                              {tabLabels.map(tab => (
+                                <button
+                                  key={tab}
+                                  onClick={() => setTimeTab(tab)}
+                                  className={cn(
+                                    'flex-1 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all capitalize flex items-center justify-center gap-1',
+                                    timeTab === tab
+                                      ? 'bg-white dark:bg-zinc-800 shadow-sm text-theme-primary'
+                                      : 'text-theme-text/50 hover:text-theme-text',
+                                  )}
+                                >
+                                  <span>{tabIcons[tab]}</span>
+                                  <span className="hidden sm:inline">{tab}</span>
+                                </button>
+                              ))}
+                            </div>
+
+                            <div className="grid grid-cols-4 gap-2">
+                              {allSlots[timeTab].map(({ time, taken }) => (
+                                <button
+                                  key={time}
+                                  onClick={() => !taken && setBookingTime(time)}
+                                  disabled={taken}
+                                  className={cn(
+                                    'py-3 rounded-xl font-black text-sm transition-all border-2',
+                                    taken
+                                      ? 'opacity-30 cursor-not-allowed border-transparent bg-theme-secondary/10 text-theme-text line-through decoration-2'
+                                      : bookingTime === time
+                                      ? 'bg-theme-primary text-white border-theme-primary shadow-lg shadow-theme-primary/20 scale-105'
+                                      : 'bg-theme-secondary/10 border-transparent hover:border-theme-secondary/30 text-theme-text hover:bg-theme-secondary/20',
+                                  )}
+                                >
+                                  {time}
+                                </button>
+                              ))}
+                            </div>
+                          </>
+                        );
+                      })()}
+
+                      <button
+                        disabled={!bookingTime}
+                        onClick={handleBooking}
+                        className={cn(
+                          "w-full text-white py-4 rounded-2xl font-black text-lg shadow-2xl transition-all active:scale-95 disabled:opacity-50 disabled:scale-100 mt-4",
+                          theme === 'feminine' ? 'bg-pink-500 shadow-pink-200' : theme === 'masculine' ? 'bg-zinc-900 shadow-zinc-200' : 'bg-theme-primary shadow-blue-200'
+                        )}
+                      >
+                        Confirmar Cita • {formatCurrency(selectedServices.reduce((sum, s) => sum + s.price, 0))}
+                      </button>
                     </div>
                   </div>
+                )}
+              </div>
 
-                  <div className="space-y-4 sm:space-y-6">
-                    <h4 className="text-[10px] sm:text-xs font-black uppercase tracking-[0.3em] text-theme-text/60">Horarios Disponibles</h4>
-
-                    {/* ── Time-of-day Tabs ────────────────────────────────── */}
-                    {(() => {
-                      // Slot definitions — unavailable slots are flagged with taken:true
-                      // to show them crossed-out (visible but non-selectable) per the design spec
-                      const allSlots: Record<'mañana' | 'tarde' | 'noche', { time: string; taken?: boolean }[]> = {
-                        mañana: [
-                          { time: '09:00' },
-                          { time: '10:00' },
-                          { time: '11:00' },
-                          { time: '12:00', taken: true },
-                        ],
-                        tarde: [
-                          { time: '13:00' },
-                          { time: '14:00', taken: true },
-                          { time: '15:00' },
-                          { time: '16:00' },
-                        ],
-                        noche: [
-                          { time: '17:00' },
-                          { time: '18:00', taken: true },
-                          { time: '19:00' },
-                          { time: '20:00' },
-                        ],
-                      };
-                      const tabLabels: ('mañana' | 'tarde' | 'noche')[] = ['mañana', 'tarde', 'noche'];
-                      const tabIcons: Record<string, string> = { mañana: '🌤', tarde: '🌇', noche: '🌙' };
-                      return (
-                        <>
-                          {/* Tab pills */}
-                          <div className="flex gap-2 p-1 bg-theme-secondary/10 rounded-2xl">
-                            {tabLabels.map(tab => (
-                              <button
-                                key={tab}
-                                onClick={() => setTimeTab(tab)}
-                                className={cn(
-                                  'flex-1 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all capitalize flex items-center justify-center gap-1.5',
-                                  timeTab === tab
-                                    ? 'bg-white dark:bg-zinc-800 shadow-sm text-theme-primary'
-                                    : 'text-theme-text/60 hover:text-theme-text',
-                                )}
-                              >
-                                <span>{tabIcons[tab]}</span>
-                                <span className="hidden sm:inline">{tab}</span>
-                              </button>
-                            ))}
-                          </div>
-
-                          {/* Slot grid */}
-                          <div className="grid grid-cols-4 gap-3">
-                            {allSlots[timeTab].map(({ time, taken }) => (
-                              <button
-                                key={time}
-                                onClick={() => !taken && setBookingTime(time)}
-                                disabled={taken}
-                                className={cn(
-                                  'py-4 rounded-[1.2rem] font-black text-base transition-all border-2',
-                                  taken
-                                    ? 'opacity-30 cursor-not-allowed border-transparent bg-theme-secondary/10 text-theme-text line-through decoration-2'
-                                    : bookingTime === time
-                                    ? 'bg-theme-primary text-white border-theme-primary shadow-xl shadow-theme-primary/20 scale-105'
-                                    : 'bg-theme-secondary/10 border-transparent hover:border-theme-secondary/30 text-theme-text hover:bg-theme-secondary/20',
-                                )}
-                              >
-                                {time}
-                              </button>
-                            ))}
-                          </div>
-                        </>
-                      );
-                    })()}
-
+              {/* Green Bubble — sticky at bottom of modal */}
+              <AnimatePresence>
+                {selectedServices.length > 0 && !isSelectingTime && (
+                  <motion.div
+                    initial={{ y: 80, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    exit={{ y: 80, opacity: 0 }}
+                    transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+                    className="absolute bottom-0 left-0 right-0 p-3 sm:p-4 z-20"
+                  >
                     <button
-                      disabled={!bookingTime}
-                      onClick={handleBooking}
-                      className={cn(
-                        "w-full text-white py-6 rounded-[2.5rem] font-black text-2xl shadow-2xl transition-all active:scale-95 disabled:opacity-50 disabled:scale-100 mt-8",
-                        theme === 'feminine' ? 'bg-pink-500 shadow-pink-200' : theme === 'masculine' ? 'bg-zinc-900 shadow-zinc-200' : 'bg-theme-primary shadow-blue-200'
-                      )}
+                      onClick={() => setIsSelectingTime(true)}
+                      className="w-full bg-green-500 hover:bg-green-600 text-white p-4 rounded-2xl shadow-[0_-4px_30px_rgba(34,197,94,0.3)] flex items-center justify-between gap-3 border border-green-400 transition-colors active:scale-[0.98]"
                     >
-                      Confirmar Cita • {formatCurrency(selectedService.price)}
+                      <div className="text-left">
+                        <div className="text-[10px] font-black uppercase tracking-wider text-green-100">{selectedServices.length} {selectedServices.length === 1 ? 'Servicio' : 'Servicios'}</div>
+                        <div className="text-xl font-black">{formatCurrency(selectedServices.reduce((acc, s) => acc + s.price, 0))}</div>
+                      </div>
+                      <div className="flex items-center gap-1.5 font-black bg-white text-green-600 px-4 py-2.5 rounded-xl text-xs uppercase tracking-widest">
+                        Continuar <ChevronRight className="w-4 h-4" />
+                      </div>
                     </button>
-                  </div>
-                </div>
-              )}
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </motion.div>
           </motion.div>
         )}
