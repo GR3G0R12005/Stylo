@@ -448,13 +448,8 @@ export default function ClienteHome() {
           {/* Shop Grid */}
           <div className="flex-1">
             {/* ── Shimmer skeleton while Firestore loads (Fase 5) ──────── */}
-<<<<<<< Updated upstream
             {loading ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-8 lg:gap-10">
-=======
-            {shops.length === 0 && (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 lg:gap-8 xl:gap-10">
->>>>>>> Stashed changes
                 {[...Array(4)].map((_, i) => (
                   <div key={i} className="rounded-[2.5rem] overflow-hidden border border-theme-secondary/10 shadow-sm">
                     <div className="shimmer-loader h-64 rounded-none" style={{ animationDelay: `${i * 0.12}s` }} />
@@ -466,26 +461,18 @@ export default function ClienteHome() {
                   </div>
                 ))}
               </div>
-<<<<<<< Updated upstream
             ) : shops.length === 0 ? (
-              <div className="text-center py-20 bg-theme-bg rounded-[3rem] border border-theme-secondary/10">
-                <div className="w-20 h-20 bg-theme-secondary/10 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <Search className="w-10 h-10 text-theme-text/40" />
-                </div>
-                <h3 className="text-2xl font-black text-theme-text mb-2">No hay negocios registrados todavía</h3>
-                <p className="text-theme-text/60">Vuelve más tarde para ver nuevos establecimientos.</p>
-              </div>
-            ) : filteredShops.length === 0 ? (
-              <div className="text-center py-20 bg-theme-bg rounded-[3rem] border border-theme-secondary/10">
-                <div className="w-20 h-20 bg-theme-secondary/10 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <Search className="w-10 h-10 text-theme-text/40" />
-=======
-            )}
-            {filteredShops.length === 0 && shops.length > 0 ? (
               <div className="text-center py-16 sm:py-20 bg-theme-bg rounded-[2rem] sm:rounded-[3rem] border border-theme-secondary/10 px-4">
                 <div className="w-16 h-16 sm:w-20 sm:h-20 bg-theme-secondary/10 rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6">
                   <Search className="w-8 h-8 sm:w-10 sm:h-10 text-theme-text/40" />
->>>>>>> Stashed changes
+                </div>
+                <h3 className="text-xl sm:text-2xl font-black text-theme-text mb-2">No hay negocios registrados todavía</h3>
+                <p className="text-sm sm:text-base text-theme-text/60">Vuelve más tarde para ver nuevos establecimientos.</p>
+              </div>
+            ) : filteredShops.length === 0 ? (
+              <div className="text-center py-16 sm:py-20 bg-theme-bg rounded-[2rem] sm:rounded-[3rem] border border-theme-secondary/10 px-4">
+                <div className="w-16 h-16 sm:w-20 sm:h-20 bg-theme-secondary/10 rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6">
+                  <Search className="w-8 h-8 sm:w-10 sm:h-10 text-theme-text/40" />
                 </div>
                 <h3 className="text-xl sm:text-2xl font-black text-theme-text mb-2">No encontramos resultados</h3>
                 <p className="text-sm sm:text-base text-theme-text/60">Prueba ajustando tus filtros de búsqueda.</p>
