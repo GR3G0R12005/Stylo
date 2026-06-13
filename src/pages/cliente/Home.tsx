@@ -160,8 +160,7 @@ export default function ClienteHome() {
   const filteredShops = (() => {
     const q = searchQuery.toLowerCase().trim();
 
-    // First pass: shops of the active type that match all filters
-    const ofActiveType = shops.filter((shop) => {
+    return shops.filter((shop) => {
       const cats = shop.categories ?? [];
       const matchSearch =
         !q ||
@@ -173,25 +172,6 @@ export default function ClienteHome() {
       const matchPrice = (shop.priceRange ?? 2) <= filters.maxPrice;
       const matchType = shop.type === activeInterface;
       return matchSearch && matchCategory && matchRating && matchPrice && matchType;
-    });
-
-    // If there are shops of the active type, show only those
-    if (ofActiveType.length > 0) return ofActiveType;
-
-    // Fallback: show ALL public shops (regardless of type) when none match the
-    // active interface — prevents a salon from being invisible to a client whose
-    // default mode is 'barberia'
-    return shops.filter((shop) => {
-      const cats = shop.categories ?? [];
-      const matchSearch =
-        !q ||
-        shop.name.toLowerCase().includes(q) ||
-        (shop.address && shop.address.toLowerCase().includes(q)) ||
-        cats.some((c) => c.toLowerCase().includes(q));
-      const matchCategory = filters.category === 'Todos' || cats.includes(filters.category);
-      const matchRating = (shop.rating ?? 0) >= filters.minRating;
-      const matchPrice = (shop.priceRange ?? 2) <= filters.maxPrice;
-      return matchSearch && matchCategory && matchRating && matchPrice;
     });
   })();
 

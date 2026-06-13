@@ -76,6 +76,27 @@ function promoStatus(expires: string): OwnerPromo['status'] {
   return 'active';
 }
 
+function sanitizeFirestoreData(obj: any): any {
+  if (obj === undefined) return null;
+  if (obj === null) return null;
+  if (Array.isArray(obj)) {
+    return obj.map(sanitizeFirestoreData);
+  }
+  if (typeof obj === 'object') {
+    const clean: any = {};
+    for (const key in obj) {
+      if (Object.prototype.hasOwnProperty.call(obj, key)) {
+        const value = obj[key];
+        if (value !== undefined) {
+          clean[key] = sanitizeFirestoreData(value);
+        }
+      }
+    }
+    return clean;
+  }
+  return obj;
+}
+
 export function OwnerDataProvider({
   role,
   children,
@@ -97,7 +118,7 @@ export function OwnerDataProvider({
     if (!auth.currentUser) return;
     try {
       const shopRef = doc(db, 'shops', auth.currentUser.uid);
-      await setDoc(shopRef, {
+      const rawData = {
         name: newSettings.shopName,
         address: newSettings.address,
         description: newSettings.bio || '',
@@ -112,7 +133,9 @@ export function OwnerDataProvider({
         settings: newSettings,
         services: newServices,
         promos: newPromos,
-      }, { merge: true });
+      };
+      const cleanData = sanitizeFirestoreData(rawData);
+      await setDoc(shopRef, cleanData, { merge: true });
     } catch (err) {
       console.error("Error syncing shop to Firestore:", err);
     }
