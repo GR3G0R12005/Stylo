@@ -157,16 +157,34 @@ export default function ClienteHome() {
     }
   }, [profile?.nombre]);
 
-  // Lock body scroll when modals are open
+  // Lock body scroll when modals are open — iOS-compatible via position:fixed trick
   useEffect(() => {
     const shouldLock = !!selectedShop || !!selectedApptDetails || !!showReviewForm;
     if (shouldLock) {
+      const scrollY = window.scrollY;
+      document.body.style.position = 'fixed';
+      document.body.style.top = `-${scrollY}px`;
+      document.body.style.width = '100%';
       document.body.style.overflow = 'hidden';
     } else {
+      const scrollY = document.body.style.top;
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.width = '';
       document.body.style.overflow = '';
+      if (scrollY) {
+        window.scrollTo(0, parseInt(scrollY || '0', 10) * -1);
+      }
     }
     return () => {
+      const scrollY = document.body.style.top;
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.width = '';
       document.body.style.overflow = '';
+      if (scrollY) {
+        window.scrollTo(0, parseInt(scrollY || '0', 10) * -1);
+      }
     };
   }, [selectedShop, selectedApptDetails, showReviewForm]);
 
@@ -726,6 +744,7 @@ export default function ClienteHome() {
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-50 bg-zinc-950/40 backdrop-blur-md flex items-center justify-center p-4 sm:p-6"
             onClick={(e) => { if (e.target === e.currentTarget) { setSelectedShop(null); setSelectedServices([]); setIsSelectingTime(false); setBookingDate(null); setBookingTime(''); }}}
+            onTouchMove={(e) => { if (e.target === e.currentTarget) e.preventDefault(); }}
           >
             <motion.div
               initial={{ scale: 0.95, opacity: 0 }}
