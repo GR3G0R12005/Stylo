@@ -157,11 +157,23 @@ export default function ClienteHome() {
     }
   }, [profile?.nombre]);
 
+  // Lock body scroll when modals are open
+  useEffect(() => {
+    const shouldLock = !!selectedShop || !!selectedApptDetails || !!showReviewForm;
+    if (shouldLock) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [selectedShop, selectedApptDetails, showReviewForm]);
+
   const filteredShops = (() => {
     const q = searchQuery.toLowerCase().trim();
 
-    // First pass: shops of the active type that match all filters
-    const ofActiveType = shops.filter((shop) => {
+    return shops.filter((shop) => {
       const cats = shop.categories ?? [];
       const matchSearch =
         !q ||
@@ -173,25 +185,6 @@ export default function ClienteHome() {
       const matchPrice = (shop.priceRange ?? 2) <= filters.maxPrice;
       const matchType = shop.type === activeInterface;
       return matchSearch && matchCategory && matchRating && matchPrice && matchType;
-    });
-
-    // If there are shops of the active type, show only those
-    if (ofActiveType.length > 0) return ofActiveType;
-
-    // Fallback: show ALL public shops (regardless of type) when none match the
-    // active interface — prevents a salon from being invisible to a client whose
-    // default mode is 'barberia'
-    return shops.filter((shop) => {
-      const cats = shop.categories ?? [];
-      const matchSearch =
-        !q ||
-        shop.name.toLowerCase().includes(q) ||
-        (shop.address && shop.address.toLowerCase().includes(q)) ||
-        cats.some((c) => c.toLowerCase().includes(q));
-      const matchCategory = filters.category === 'Todos' || cats.includes(filters.category);
-      const matchRating = (shop.rating ?? 0) >= filters.minRating;
-      const matchPrice = (shop.priceRange ?? 2) <= filters.maxPrice;
-      return matchSearch && matchCategory && matchRating && matchPrice;
     });
   })();
 
@@ -731,15 +724,15 @@ export default function ClienteHome() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-zinc-950/40 backdrop-blur-md flex items-end sm:items-center justify-center sm:p-4 md:p-6"
+            className="fixed inset-0 z-50 bg-zinc-950/40 backdrop-blur-md flex items-center justify-center p-4 sm:p-6"
             onClick={(e) => { if (e.target === e.currentTarget) { setSelectedShop(null); setSelectedServices([]); setIsSelectingTime(false); setBookingDate(null); setBookingTime(''); }}}
           >
             <motion.div
-              initial={{ y: '100%', scale: 1 }}
-              animate={{ y: 0, scale: 1 }}
-              exit={{ y: '100%', scale: 0.9 }}
-              transition={{ type: 'spring', stiffness: 260, damping: 28 }}
-              className="bg-theme-bg w-full max-w-2xl rounded-t-[2rem] sm:rounded-[2.5rem] max-h-[85vh] shadow-2xl relative text-theme-text flex flex-col"
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+              className="bg-theme-bg w-full max-w-2xl rounded-[2rem] sm:rounded-[2.5rem] max-h-[90vh] shadow-2xl relative text-theme-text flex flex-col"
             >
               {/* Fixed Header */}
               <div className="p-4 sm:p-5 md:p-6 pb-3 sm:pb-4 shrink-0 border-b border-theme-secondary/10">
