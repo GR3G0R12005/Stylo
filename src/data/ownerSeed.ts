@@ -34,16 +34,80 @@ export interface OwnerClient {
   phone?: string;
 }
 
+export type WeekdayKey = 'mon' | 'tue' | 'wed' | 'thu' | 'fri' | 'sat' | 'sun';
+
+export const WEEKDAY_KEYS: WeekdayKey[] = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
+
+export const WEEKDAY_LABELS: Record<WeekdayKey, string> = {
+  mon: 'Lunes',
+  tue: 'Martes',
+  wed: 'Miércoles',
+  thu: 'Jueves',
+  fri: 'Viernes',
+  sat: 'Sábado',
+  sun: 'Domingo',
+};
+
+export interface EmployeeDaySchedule {
+  enabled: boolean;
+  startTime: string;
+  endTime: string;
+}
+
+export type EmployeeWeeklySchedule = Record<WeekdayKey, EmployeeDaySchedule>;
+
 export interface OwnerEmployee {
   id: string;
   name: string;
   role: string;
   avatar: string;
+  photoUrl?: string;
   todayCitas: number;
   rating: number;
   specialty: string;
   since: string;
   active: boolean;
+  schedule: EmployeeWeeklySchedule;
+}
+
+export const SCHEDULE_HOURS = [
+  '08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00',
+  '15:00', '16:00', '17:00', '18:00', '19:00', '20:00', '21:00',
+];
+
+export function defaultWeeklySchedule(): EmployeeWeeklySchedule {
+  return WEEKDAY_KEYS.reduce((acc, day) => {
+    acc[day] = {
+      enabled: day !== 'sun',
+      startTime: '09:00',
+      endTime: '18:00',
+    };
+    return acc;
+  }, {} as EmployeeWeeklySchedule);
+}
+
+export function dateToWeekday(date: string): WeekdayKey {
+  const d = new Date(`${date}T12:00:00`);
+  const map: WeekdayKey[] = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+  return map[d.getDay()];
+}
+
+export function isEmployeeWorkingAt(
+  employee: OwnerEmployee,
+  date: string,
+  hour: string,
+): boolean {
+  if (!employee.active) return false;
+  const day = dateToWeekday(date);
+  const sched = employee.schedule?.[day];
+  if (!sched?.enabled) return false;
+  return hour >= sched.startTime && hour < sched.endTime;
+}
+
+export function isEmployeeWorkingOnDate(employee: OwnerEmployee, date: string): boolean {
+  if (!employee.active) return false;
+  const day = dateToWeekday(date);
+  return !!employee.schedule?.[day]?.enabled;
 }
 
 export interface OwnerPromo {
@@ -129,6 +193,21 @@ export function initials(name: string): string {
     .toUpperCase();
 }
 
+export function normalizeEmployee(employee: Partial<OwnerEmployee> & Pick<OwnerEmployee, 'id' | 'name'>): OwnerEmployee {
+  const schedule = employee.schedule ?? defaultWeeklySchedule();
+  return {
+    role: 'Empleado',
+    todayCitas: 0,
+    rating: 5,
+    specialty: '',
+    since: new Date().toISOString().slice(0, 7),
+    active: true,
+    ...employee,
+    schedule,
+    avatar: employee.avatar || initials(employee.name),
+  };
+}
+
 function barberSeed(): OwnerState {
   const today = addDays(0);
   const tomorrow = addDays(1);
@@ -161,9 +240,9 @@ function barberSeed(): OwnerState {
       { id: '6', name: 'Luis Herrera', avatar: 'LH', visits: 7, lastVisit: addDays(-15), spent: 245, rating: 4 },
     ],
     employees: [
-      { id: '1', name: 'Ramón Díaz', role: 'Master Barber', avatar: 'RD', todayCitas: 5, rating: 4.9, specialty: 'Fades & Diseños', since: '2024-01', active: true },
-      { id: '2', name: 'Jorge Silva', role: 'Barber Senior', avatar: 'JS', todayCitas: 4, rating: 4.7, specialty: 'Cortes Clásicos', since: '2024-06', active: true },
-      { id: '3', name: 'David Rojas', role: 'Barber Jr.', avatar: 'DR', todayCitas: 3, rating: 4.5, specialty: 'Barba & Afeitado', since: '2025-02', active: true },
+      normalizeEmployee({ id: '1', name: 'Ramón Díaz', role: 'Master Barber', avatar: 'RD', todayCitas: 5, rating: 4.9, specialty: 'Fades & Diseños', since: '2024-01', active: true }),
+      normalizeEmployee({ id: '2', name: 'Jorge Silva', role: 'Barber Senior', avatar: 'JS', todayCitas: 4, rating: 4.7, specialty: 'Cortes Clásicos', since: '2024-06', active: true }),
+      normalizeEmployee({ id: '3', name: 'David Rojas', role: 'Barber Jr.', avatar: 'DR', todayCitas: 3, rating: 4.5, specialty: 'Barba & Afeitado', since: '2025-02', active: true }),
     ],
     promos: [
       { id: '1', title: 'Promo Fin de Semana', discount: '20% OFF', code: 'FIN20', expires: addDays(5), status: 'active', uses: 14 },
@@ -229,9 +308,9 @@ function salonSeed(): OwnerState {
       { id: '6', name: 'Isabella Mora', avatar: 'IM', visits: 8, lastVisit: addDays(-18), spent: 680, rating: 5 },
     ],
     employees: [
-      { id: '1', name: 'María Fernández', role: 'Estilista Senior', avatar: 'MF', todayCitas: 4, rating: 5.0, specialty: 'Color & Mechas', since: '2023-11', active: true },
-      { id: '2', name: 'Paola Gómez', role: 'Colorista', avatar: 'PG', todayCitas: 3, rating: 4.8, specialty: 'Colorimetría', since: '2024-03', active: true },
-      { id: '3', name: 'Diana Torres', role: 'Manicurista', avatar: 'DT', todayCitas: 5, rating: 4.6, specialty: 'Nail Art & Spa', since: '2025-01', active: true },
+      normalizeEmployee({ id: '1', name: 'María Fernández', role: 'Estilista Senior', avatar: 'MF', todayCitas: 4, rating: 5.0, specialty: 'Color & Mechas', since: '2023-11', active: true }),
+      normalizeEmployee({ id: '2', name: 'Paola Gómez', role: 'Colorista', avatar: 'PG', todayCitas: 3, rating: 4.8, specialty: 'Colorimetría', since: '2024-03', active: true }),
+      normalizeEmployee({ id: '3', name: 'Diana Torres', role: 'Manicurista', avatar: 'DT', todayCitas: 5, rating: 4.6, specialty: 'Nail Art & Spa', since: '2025-01', active: true }),
     ],
     promos: [
       { id: '1', title: 'Semana de la Belleza', discount: '25% OFF', code: 'BELLEZA25', expires: addDays(7), status: 'active', uses: 22 },
