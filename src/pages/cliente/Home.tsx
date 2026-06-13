@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { useAuth } from '../../context/AuthContext';
 import { db, handleFirestoreError, OperationType, auth } from '../../lib/firebase';
 import { collection, getDocs, query, addDoc, serverTimestamp, where, orderBy, onSnapshot } from 'firebase/firestore';
-import { Search, Calendar, Clock, MapPin, Star, User, LogOut, CheckCircle2, ChevronRight, X, ArrowLeft, MessageSquare, Bell, SlidersHorizontal, DollarSign, Moon, Sun, Phone } from 'lucide-react';
+import { Search, Calendar, Clock, MapPin, Star, User, LogOut, CheckCircle2, ChevronRight, X, ArrowLeft, MessageSquare, Bell, SlidersHorizontal, DollarSign, Moon, Sun, Phone, AlertCircle } from 'lucide-react';
 import { cn, formatCurrency } from '../../lib/utils';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -40,6 +40,7 @@ export default function ClienteHome() {
     maxPrice: 3,
     onlyAvailable: false
   });
+  const [shopsError, setShopsError] = useState<string | null>(null);
   const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
     try {
       return localStorage.getItem('steylook_dark') === 'true';
@@ -68,10 +69,13 @@ export default function ClienteHome() {
     const q = query(collection(db, 'shops'), where('isPublic', '==', true));
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Shop));
+      console.log("Home: Loaded shops:", data);
       setShops(data);
+      setShopsError(null);
       setLoading(false);
     }, (err) => {
       console.error("Home: Error al escuchar tiendas en tiempo real", err);
+      setShopsError(err.message || String(err));
       setLoading(false);
     });
 
@@ -95,11 +99,11 @@ export default function ClienteHome() {
     const matchSearch =
       !q ||
       shop.name.toLowerCase().includes(q) ||
-      shop.address.toLowerCase().includes(q) ||
-      shop.categories.some((c) => c.toLowerCase().includes(q));
-    const matchCategory = filters.category === 'Todos' || shop.categories.includes(filters.category);
-    const matchRating = shop.rating >= filters.minRating;
-    const matchPrice = shop.priceRange <= filters.maxPrice;
+      (shop.address && shop.address.toLowerCase().includes(q)) ||
+      (shop.categories && shop.categories.some((c) => c.toLowerCase().includes(q)));
+    const matchCategory = filters.category === 'Todos' || (shop.categories && shop.categories.includes(filters.category));
+    const matchRating = (shop.rating ?? 5.0) >= filters.minRating;
+    const matchPrice = (shop.priceRange ?? 2) <= filters.maxPrice;
     const matchType =
       filters.category === 'Barberías'
         ? shop.type === 'barberia'
@@ -326,6 +330,16 @@ export default function ClienteHome() {
         </section>
       ) : (
         <>
+
+        {shopsError && (
+          <div className="mb-6 p-4 rounded-2xl bg-red-500/10 border border-red-500/20 text-red-500 text-sm font-bold flex items-center gap-3">
+            <AlertCircle className="w-5 h-5 shrink-0" />
+            <div>
+              <p className="font-black">Error al cargar negocios</p>
+              <p className="text-xs opacity-80">{shopsError}</p>
+            </div>
+          </div>
+        )}
 
         {/* Welcome Section */}
         <motion.div
