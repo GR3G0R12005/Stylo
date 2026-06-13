@@ -69,16 +69,7 @@ export default function ClienteHome() {
     const q = query(collection(db, shopsPath));
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Shop));
-      if (data.length > 0) {
-        setShops(data);
-      } else {
-        const mockShops: Shop[] = [
-          { id: '1', name: 'The Royal Barber', type: 'barberia', address: 'Calle Mayor 12', phone: '+1 829-456-7890', rating: 4.9, description: 'Estilo clásico y moderno para el caballero exigente.', photo: 'https://images.unsplash.com/photo-1503951914875-452162b0f3f1?auto=format&fit=crop&q=80&w=800', priceRange: 2, categories: ['Corte', 'Barba'] },
-          { id: '2', name: 'Aura Beauty Studio', type: 'salon', address: 'Av. Libertad 45', phone: '+1 809-123-4567', rating: 4.8, description: 'Especialistas en color, estilismo y cuidado capilar avanzado.', photo: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&q=80&w=800', priceRange: 3, categories: ['Color', 'Tratamiento', 'Corte'] },
-          { id: '3', name: 'Gents Garage', type: 'barberia', address: 'Calle Silencio 5', phone: '+1 829-987-6543', rating: 4.7, description: 'Barra libre, buena música y el mejor fade de la ciudad.', photo: 'https://images.unsplash.com/photo-1585747860715-2ba37e788b70?auto=format&fit=crop&q=80&w=800', priceRange: 1, categories: ['Corte', 'Facial'] }
-        ];
-        setShops(mockShops);
-      }
+      setShops(data);
       setLoading(false);
     }, (err) => {
       console.error("Home: Error al escuchar tiendas en tiempo real", err);
@@ -457,7 +448,7 @@ export default function ClienteHome() {
           {/* Shop Grid */}
           <div className="flex-1">
             {/* ── Shimmer skeleton while Firestore loads (Fase 5) ──────── */}
-            {shops.length === 0 && (
+            {loading ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-8 lg:gap-10">
                 {[...Array(4)].map((_, i) => (
                   <div key={i} className="rounded-[2.5rem] overflow-hidden border border-theme-secondary/10 shadow-sm">
@@ -470,8 +461,15 @@ export default function ClienteHome() {
                   </div>
                 ))}
               </div>
-            )}
-            {filteredShops.length === 0 && shops.length > 0 ? (
+            ) : shops.length === 0 ? (
+              <div className="text-center py-20 bg-theme-bg rounded-[3rem] border border-theme-secondary/10">
+                <div className="w-20 h-20 bg-theme-secondary/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <Search className="w-10 h-10 text-theme-text/40" />
+                </div>
+                <h3 className="text-2xl font-black text-theme-text mb-2">No hay negocios registrados todavía</h3>
+                <p className="text-theme-text/60">Vuelve más tarde para ver nuevos establecimientos.</p>
+              </div>
+            ) : filteredShops.length === 0 ? (
               <div className="text-center py-20 bg-theme-bg rounded-[3rem] border border-theme-secondary/10">
                 <div className="w-20 h-20 bg-theme-secondary/10 rounded-full flex items-center justify-center mx-auto mb-6">
                   <Search className="w-10 h-10 text-theme-text/40" />
@@ -810,7 +808,6 @@ export default function ClienteHome() {
                   setShowReviewForm(null);
                   setNotification("¡Gracias por tu reseña! Ayudará a otros clientes.");
                   setTimeout(() => setNotification(null), 5000);
-                  fetchShops(); // Refresh shops to see potential rating changes (if handled by server)
                 }}
               />
             </motion.div>

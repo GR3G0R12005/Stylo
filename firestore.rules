@@ -53,7 +53,7 @@ service cloud.firestore {
     // Shops
     match /shops/{shopId} {
       allow read: if true;
-      allow write: if false;
+      allow write: if isOwner(shopId) && isValidId(shopId);
       
       match /services/{serviceId} {
         allow read: if true;
