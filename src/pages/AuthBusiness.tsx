@@ -5,7 +5,7 @@ import { LogIn, UserPlus, ArrowLeft, Mail, Lock, User, Phone, Eye, EyeOff, Sciss
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { auth, db } from '../lib/firebase';
 import { doc, setDoc } from 'firebase/firestore';
-import { roleLabel } from '../lib/authHelpers';
+import { fetchUserRole, getRolePath, roleLabel } from '../lib/authHelpers';
 
 export default function AuthBusiness() {
   const navigate = useNavigate();
@@ -22,7 +22,7 @@ export default function AuthBusiness() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const getRolePath = () => businessType === 'barbero' ? '/barbero' : '/salon';
+  const businessPath = businessType === 'barbero' ? '/barbero' : '/salon';
   const getColor = () => businessType === 'barbero' ? 'amber' : 'pink';
   const getIcon = () => businessType === 'barbero' ? Scissors : Sparkles;
 
@@ -32,8 +32,26 @@ export default function AuthBusiness() {
     setError('');
 
     try {
-      await signInWithEmailAndPassword(auth, email.trim().toLowerCase(), password);
-      navigate(getRolePath());
+      const cred = await signInWithEmailAndPassword(auth, email.trim().toLowerCase(), password);
+      const tipo = await fetchUserRole(cred.user.uid);
+
+      if (!tipo || tipo === 'cliente') {
+        await auth.signOut();
+        setError(
+          tipo === 'cliente'
+            ? 'Esta cuenta está registrada como cliente. Usa el acceso de cliente o crea una cuenta de negocio con otro email.'
+            : 'No se encontró un perfil de negocio. Crea una cuenta primero.',
+        );
+        return;
+      }
+
+      if (tipo !== businessType) {
+        await auth.signOut();
+        setError(`Esta cuenta es de ${roleLabel(tipo)}. Usa el acceso correcto para tu tipo de negocio.`);
+        return;
+      }
+
+      navigate(getRolePath(tipo));
     } catch (err: unknown) {
       const code = (err as { code?: string })?.code;
       const messages: Record<string, string> = {
@@ -74,7 +92,7 @@ export default function AuthBusiness() {
         createdAt: new Date().toISOString(),
       });
 
-      navigate(getRolePath());
+      navigate(businessPath);
     } catch (err: unknown) {
       const code = (err as { code?: string })?.code;
       const messages: Record<string, string> = {
