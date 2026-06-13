@@ -157,6 +157,19 @@ export default function ClienteHome() {
     }
   }, [profile?.nombre]);
 
+  // Lock body scroll when modals are open
+  useEffect(() => {
+    const shouldLock = !!selectedShop || !!selectedApptDetails || !!showReviewForm;
+    if (shouldLock) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [selectedShop, selectedApptDetails, showReviewForm]);
+
   const filteredShops = (() => {
     const q = searchQuery.toLowerCase().trim();
 
@@ -711,15 +724,15 @@ export default function ClienteHome() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-zinc-950/40 backdrop-blur-md flex items-end sm:items-center justify-center sm:p-4 md:p-6"
+            className="fixed inset-0 z-50 bg-zinc-950/40 backdrop-blur-md flex items-center justify-center p-4 sm:p-6"
             onClick={(e) => { if (e.target === e.currentTarget) { setSelectedShop(null); setSelectedServices([]); setIsSelectingTime(false); setBookingDate(null); setBookingTime(''); }}}
           >
             <motion.div
-              initial={{ y: '100%', scale: 1 }}
-              animate={{ y: 0, scale: 1 }}
-              exit={{ y: '100%', scale: 0.9 }}
-              transition={{ type: 'spring', stiffness: 260, damping: 28 }}
-              className="bg-theme-bg w-full max-w-2xl rounded-t-[2rem] sm:rounded-[2.5rem] max-h-[85vh] shadow-2xl relative text-theme-text flex flex-col"
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+              className="bg-theme-bg w-full max-w-2xl rounded-[2rem] sm:rounded-[2.5rem] max-h-[90vh] shadow-2xl relative text-theme-text flex flex-col"
             >
               {/* Fixed Header */}
               <div className="p-4 sm:p-5 md:p-6 pb-3 sm:pb-4 shrink-0 border-b border-theme-secondary/10">
