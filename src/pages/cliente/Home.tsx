@@ -20,7 +20,7 @@ import ClienteLayout from '../../components/cliente/ClienteLayout';
 const APPT_STORAGE_KEY = 'steylook_client_appointments';
 
 export default function ClienteHome() {
-  const { profile, signOut, theme } = useAuth();
+  const { profile, signOut, theme, setTheme } = useAuth();
   const [shops, setShops] = useState<Shop[]>([]);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [selectedShop, setSelectedShop] = useState<Shop | null>(null);
@@ -51,6 +51,13 @@ export default function ClienteHome() {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState<'home' | 'appointments'>('home');
   const [timeTab, setTimeTab] = useState<'mañana' | 'tarde' | 'noche'>('mañana');
+  const [activeInterface, setActiveInterface] = useState<'barberia' | 'salon'>(() => {
+    return theme === 'feminine' ? 'salon' : 'barberia';
+  });
+
+  useEffect(() => {
+    setTheme(activeInterface === 'salon' ? 'feminine' : 'masculine');
+  }, [activeInterface, setTheme]);
 
   useEffect(() => {
     if (isDarkMode) {
@@ -104,12 +111,7 @@ export default function ClienteHome() {
     const matchCategory = filters.category === 'Todos' || (shop.categories && shop.categories.includes(filters.category));
     const matchRating = (shop.rating ?? 5.0) >= filters.minRating;
     const matchPrice = (shop.priceRange ?? 2) <= filters.maxPrice;
-    const matchType =
-      filters.category === 'Barberías'
-        ? shop.type === 'barberia'
-        : filters.category === 'Salones de Belleza'
-          ? shop.type === 'salon'
-          : true;
+    const matchType = shop.type === activeInterface;
     return matchSearch && matchCategory && matchRating && matchPrice && matchType;
   });
 
@@ -253,6 +255,7 @@ export default function ClienteHome() {
       maxPrice: 3,
       onlyAvailable: false
     });
+    setActiveInterface(theme === 'feminine' ? 'salon' : 'barberia');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -265,6 +268,8 @@ export default function ClienteHome() {
       onResetHome={resetHome}
       activeTab={activeTab}
       onTabChange={setActiveTab}
+      activeInterface={activeInterface}
+      onChangeInterface={setActiveInterface}
     >
       {/* AI Notifications */}
       <AnimatePresence>

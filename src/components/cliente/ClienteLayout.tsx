@@ -12,6 +12,8 @@ interface Props {
   onResetHome: () => void;
   activeTab?: 'home' | 'appointments';
   onTabChange?: (tab: 'home' | 'appointments') => void;
+  activeInterface?: 'barberia' | 'salon';
+  onChangeInterface?: (value: 'barberia' | 'salon') => void;
 }
 
 export default function ClienteLayout({
@@ -21,9 +23,10 @@ export default function ClienteLayout({
   onResetHome,
   activeTab = 'home',
   onTabChange,
+  activeInterface = 'barberia',
+  onChangeInterface,
 }: Props) {
   const { profile, signOut, theme } = useAuth();
-  const [menuOpen, setMenuOpen] = useState(false);
 
   const themeBadge =
     theme === 'feminine' ? 'Dama Elegante' : theme === 'masculine' ? 'Caballero Moderno' : 'Cliente Premium';
@@ -39,14 +42,6 @@ export default function ClienteLayout({
       <header className="sticky top-0 z-40 glass-structural">
         <motion.div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 h-14 sm:h-16 md:h-[4.5rem] flex items-center justify-between gap-2 sm:gap-3">
           <div className="flex items-center gap-2 sm:gap-4 min-w-0">
-            <button
-              type="button"
-              onClick={() => setMenuOpen(true)}
-              className="lg:hidden p-2.5 rounded-xl bg-theme-secondary/10 text-theme-secondary shrink-0"
-              aria-label="Abrir menú"
-            >
-              <Menu className="w-5 h-5" />
-            </button>
             <Link to="/cliente" onClick={onResetHome} className="flex items-center gap-2 sm:gap-3 min-w-0">
               <span className="w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10 rounded-xl inline-flex items-center justify-center text-white bg-theme-primary shadow-lg shadow-theme-primary/20 shrink-0">
                 <Star className="w-3.5 h-3.5 sm:w-4 sm:h-4 md:w-5 md:h-5 fill-current" />
@@ -112,76 +107,41 @@ export default function ClienteLayout({
           </div>
         </motion.div>
       </header>
-
-      <AnimatePresence>
-        {menuOpen && (
-          <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm lg:hidden"
-              onClick={() => setMenuOpen(false)}
-            />
-            <motion.aside
-              initial={{ x: '-100%' }}
-              animate={{ x: 0 }}
-              exit={{ x: '-100%' }}
-              transition={{ type: 'spring', damping: 28, stiffness: 280 }}
-              className="fixed left-0 top-0 bottom-0 z-[51] w-[min(80vw,300px)] sm:w-[min(85vw,320px)] backdrop-blur-2xl bg-white/90 dark:bg-zinc-900/90 border-r border-zinc-200/50 dark:border-zinc-800/50 p-4 sm:p-6 flex flex-col lg:hidden"
-            >
-              <div className="flex items-center justify-between mb-8">
-                <p className="font-black text-lg">Menú</p>
-                <button type="button" onClick={() => setMenuOpen(false)} className="p-2 rounded-xl bg-theme-secondary/10">
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-              <nav className="space-y-2 flex-1">
-                {[
-                  { id: 'home' as const, label: 'Explorar locales', icon: Home },
-                  { id: 'appointments' as const, label: 'Mis citas', icon: Calendar },
-                ].map((item) => (
-                  <button
-                    key={item.id}
-                    type="button"
-                    onClick={() => {
-                      onTabChange?.(item.id);
-                      if (item.id === 'home') onResetHome();
-                      setMenuOpen(false);
-                    }}
-                    className={cn(
-                      'w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl font-bold text-sm transition-all',
-                      activeTab === item.id ? 'bg-theme-primary text-white' : 'hover:bg-theme-primary/5',
-                    )}
-                  >
-                    <item.icon className="w-5 h-5" />
-                    {item.label}
-                  </button>
-                ))}
-                <Link
-                  to="/"
-                  onClick={() => setMenuOpen(false)}
-                  className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl font-bold text-sm text-theme-secondary hover:bg-theme-primary/5"
-                >
-                  <Home className="w-5 h-5" />
-                  Página principal
-                </Link>
-              </nav>
-              <div className="pt-6 border-t border-theme-secondary/20">
-                <p className="text-xs text-theme-secondary mb-1">Sesión</p>
-                <p className="font-bold truncate">{profile?.nombre}</p>
-                <p className="text-xs text-theme-secondary truncate">{profile?.email}</p>
-              </div>
-            </motion.aside>
-          </>
-        )}
-      </AnimatePresence>
+      {/* ── Floating Interface Switch — Top Bubble ──────────────────── */}
+      <div className="fixed top-[4.5rem] sm:top-20 right-4 sm:right-6 md:right-8 z-40 p-1 rounded-full bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md border border-zinc-200/50 dark:border-zinc-800/50 shadow-xl flex items-center gap-1">
+        <button
+          type="button"
+          onClick={() => onChangeInterface?.('barberia')}
+          className={cn(
+            "px-3 py-1.5 rounded-full text-[9px] sm:text-xs font-black uppercase tracking-wider transition-all flex items-center gap-1",
+            activeInterface === 'barberia'
+              ? "bg-theme-primary text-white shadow-md"
+              : "text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200"
+          )}
+        >
+          <span>💈</span>
+          <span>Barber</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => onChangeInterface?.('salon')}
+          className={cn(
+            "px-3 py-1.5 rounded-full text-[9px] sm:text-xs font-black uppercase tracking-wider transition-all flex items-center gap-1",
+            activeInterface === 'salon'
+              ? "bg-theme-primary text-white shadow-md"
+              : "text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200"
+          )}
+        >
+          <span>✂️</span>
+          <span>Salón</span>
+        </button>
+      </div>
 
       <main className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-10">{children}</main>
 
-      {/* ── Bottom Tab Bar — Structural Glassmorphism ─────────────────── */}
-      <nav className="fixed bottom-0 inset-x-0 z-40 lg:hidden backdrop-blur-2xl bg-white/80 dark:bg-zinc-900/85 border-t border-zinc-200/50 dark:border-zinc-800/50 px-3 sm:px-4 py-2.5 sm:py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
-        <div className="flex justify-between items-center max-w-md mx-auto">
+      {/* ── Bottom Tab Bar — Floating Bubble ─────────────────── */}
+      <nav className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 w-[92%] max-w-sm backdrop-blur-2xl bg-white/90 dark:bg-zinc-900/90 border border-zinc-200/50 dark:border-zinc-800/50 rounded-full shadow-2xl px-4 py-2 lg:hidden">
+        <div className="flex justify-between items-center">
           {[
             { id: 'home' as const, icon: Star, label: 'Explorar' },
             { id: 'appointments' as const, icon: Calendar, label: 'Citas' },
@@ -207,7 +167,7 @@ export default function ClienteLayout({
             <span className="text-[8px] sm:text-[9px] font-black uppercase tracking-wider">Tema</span>
           </button>
           <button type="button" onClick={signOut} className="flex flex-col items-center gap-1 px-2 sm:px-3 py-1 text-zinc-400 min-w-[3.5rem] sm:min-w-[4rem]">
-            <User className="w-5 h-5 sm:w-6 sm:h-6" />
+            <LogOut className="w-5 h-5 sm:w-6 sm:h-6" />
             <span className="text-[8px] sm:text-[9px] font-black uppercase tracking-wider">Salir</span>
           </button>
         </div>

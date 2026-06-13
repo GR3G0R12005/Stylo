@@ -17,6 +17,7 @@ interface AuthContextType {
   profile: UserProfile | null;
   loading: boolean;
   theme: 'default' | 'feminine' | 'masculine';
+  setTheme: (theme: 'default' | 'feminine' | 'masculine') => void;
   signOut: () => Promise<void>;
 }
 
@@ -25,6 +26,7 @@ const AuthContext = createContext<AuthContextType>({
   profile: null,
   loading: true,
   theme: 'default',
+  setTheme: () => {},
   signOut: async () => {},
 });
 
@@ -100,7 +102,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ user, profile, loading, theme, signOut }}>
+    <AuthContext.Provider value={{ user, profile, loading, theme, setTheme, signOut }}>
       {children}
     </AuthContext.Provider>
   );
