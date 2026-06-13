@@ -3,6 +3,7 @@
     "rules": "firestore.rules"
   },
   "hosting": {
+    "site": "steylook-app-2026",
     "public": "dist",
     "ignore": [
       "firebase.json",

@@ -35,7 +35,8 @@ export default function ClienteLayout({
         'pb-24 lg:pb-10',
       )}
     >
-      <header className="sticky top-0 z-40 bg-theme-bg/85 backdrop-blur-xl border-b border-theme-secondary/20">
+      {/* ── Sticky Header — Structural Glassmorphism ──────────────────── */}
+      <header className="sticky top-0 z-40 glass-structural">
         <motion.div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-[4.5rem] flex items-center justify-between gap-3">
           <div className="flex items-center gap-2 sm:gap-4 min-w-0">
             <button
@@ -127,7 +128,7 @@ export default function ClienteLayout({
               animate={{ x: 0 }}
               exit={{ x: '-100%' }}
               transition={{ type: 'spring', damping: 28, stiffness: 280 }}
-              className="fixed left-0 top-0 bottom-0 z-[51] w-[min(85vw,320px)] bg-theme-bg border-r border-theme-secondary/20 p-6 flex flex-col lg:hidden"
+              className="fixed left-0 top-0 bottom-0 z-[51] w-[min(85vw,320px)] backdrop-blur-2xl bg-white/90 dark:bg-zinc-900/90 border-r border-zinc-200/50 dark:border-zinc-800/50 p-6 flex flex-col lg:hidden"
             >
               <div className="flex items-center justify-between mb-8">
                 <p className="font-black text-lg">Menú</p>
@@ -178,7 +179,8 @@ export default function ClienteLayout({
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10">{children}</main>
 
-      <nav className="fixed bottom-0 inset-x-0 z-40 lg:hidden bg-white/90 dark:bg-zinc-900/90 backdrop-blur-2xl border-t border-theme-secondary/15 px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+      {/* ── Bottom Tab Bar — Structural Glassmorphism ─────────────────── */}
+      <nav className="fixed bottom-0 inset-x-0 z-40 lg:hidden backdrop-blur-2xl bg-white/80 dark:bg-zinc-900/85 border-t border-zinc-200/50 dark:border-zinc-800/50 px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
         <div className="flex justify-between items-center max-w-md mx-auto">
           {[
             { id: 'home' as const, icon: Star, label: 'Explorar' },

@@ -100,26 +100,33 @@ export default function Landing() {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {FEATURED_SPOTS.map((spot, i) => (
-            <motion.div 
+            <motion.div
               key={i}
               initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }}
-              className="group rounded-[2rem] bg-white/5 border border-white/10 overflow-hidden hover:border-white/20 transition-all cursor-pointer"
+              className="group relative rounded-[2rem] bg-zinc-900 border border-zinc-800 overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.25)] hover:-translate-y-1 hover:shadow-[0_20px_50px_rgb(0,0,0,0.4)] hover:border-zinc-700 transition-all duration-500 cursor-pointer"
             >
-              <div className="h-48 overflow-hidden relative">
+              <div className="h-52 overflow-hidden relative">
                 <img src={spot.img} alt={spot.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
-                <div className="absolute top-4 right-4 bg-black/60 backdrop-blur-md px-3 py-1 rounded-full flex items-center gap-1.5 border border-white/10">
+                {/* Gradient overlay for readability */}
+                <div className="absolute inset-0 bg-gradient-to-t from-zinc-900/80 via-transparent to-transparent" />
+                <div className="absolute top-4 right-4 bg-zinc-900/80 px-3 py-1.5 rounded-2xl flex items-center gap-1.5 border border-zinc-700">
                   <Star className="w-3.5 h-3.5 text-barber-gold fill-current" />
-                  <span className="text-xs font-bold">{spot.rating}</span>
+                  <span className="text-xs font-black">{spot.rating}</span>
                 </div>
               </div>
               <div className="p-6">
                 <p className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500 mb-2">{spot.type}</p>
-                <h3 className="text-xl font-bold mb-4">{spot.name}</h3>
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-medium text-zinc-400">{spot.reviews} reseñas</span>
+                <h3 className="text-xl font-black mb-1 text-white">{spot.name}</h3>
+                <p className="text-xs text-zinc-500 font-medium mb-4">{spot.reviews} reseñas verificadas</p>
+                <div className="flex items-center justify-between pt-4 border-t border-zinc-800">
+                  <div className="flex gap-0.5">
+                    {[...Array(5)].map((_, j) => (
+                      <Star key={j} className="w-3 h-3 fill-barber-gold text-barber-gold" />
+                    ))}
+                  </div>
                   <button
                     onClick={() => setIsSheetOpen(true)}
-                    className="px-4 py-2 bg-white/10 rounded-full text-xs font-bold uppercase tracking-widest hover:bg-white text-white hover:text-black transition-colors cursor-pointer"
+                    className="px-5 py-2 bg-white text-black rounded-full text-xs font-black uppercase tracking-widest hover:bg-zinc-200 transition-colors cursor-pointer shadow-lg shadow-white/5"
                   >
                     Reservar
                   </button>
@@ -189,13 +196,14 @@ export default function Landing() {
                 <div className="w-2 h-2 rounded-full bg-green-500"/>
               </div>
               <div className="mt-6 space-y-4">
-                <div className="h-8 w-3/4 bg-zinc-800 rounded animate-pulse" />
+                {/* Premium shimmer skeletons — upgraded from animate-pulse */}
+                <div className="h-8 w-3/4 shimmer-loader" />
                 <div className="grid grid-cols-3 gap-3">
-                  <div className="h-20 bg-zinc-800 rounded animate-pulse" />
-                  <div className="h-20 bg-zinc-800 rounded animate-pulse" />
-                  <div className="h-20 bg-zinc-800 rounded animate-pulse" />
+                  <div className="h-20 shimmer-loader" />
+                  <div className="h-20 shimmer-loader" style={{ animationDelay: '0.15s' }} />
+                  <div className="h-20 shimmer-loader" style={{ animationDelay: '0.3s' }} />
                 </div>
-                <div className="h-32 w-full bg-zinc-800 rounded animate-pulse" />
+                <div className="h-32 w-full shimmer-loader" style={{ animationDelay: '0.1s' }} />
               </div>
             </div>
           </div>
@@ -273,7 +281,7 @@ function RoleBottomSheet({ isOpen, onClose }: { isOpen: boolean; onClose: () => 
               }
               transition={
                 isMobile
-                  ? { type: 'spring', damping: 25, stiffness: 200 }
+                  ? { type: 'spring', stiffness: 260, damping: 28 }
                   : { duration: 0.25, ease: 'easeOut' }
               }
               className="pointer-events-auto w-full max-w-md bg-zinc-900 border-t md:border border-white/10 rounded-t-[2.5rem] md:rounded-[2.5rem] p-8 shadow-2xl relative"
