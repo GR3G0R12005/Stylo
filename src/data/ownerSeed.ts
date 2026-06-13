@@ -153,6 +153,7 @@ export interface OwnerSettings {
   notifSMS: boolean;
   profileImage?: string;  // Firebase Storage download URL
   coverImage?: string;    // Firebase Storage download URL
+  isPublic?: boolean;
 }
 
 export interface BlockedSlot {

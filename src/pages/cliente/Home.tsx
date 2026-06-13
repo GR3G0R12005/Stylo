@@ -65,8 +65,7 @@ export default function ClienteHome() {
   }, [isDarkMode]);
 
   useEffect(() => {
-    const shopsPath = 'shops';
-    const q = query(collection(db, shopsPath));
+    const q = query(collection(db, 'shops'), where('isPublic', '==', true));
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Shop));
       setShops(data);

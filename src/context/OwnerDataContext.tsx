@@ -108,6 +108,7 @@ export function OwnerDataProvider({
         type: role === 'barbero' ? 'barberia' : 'salon',
         priceRange: 2,
         categories: Array.from(new Set(newServices.filter(s => s.active).map(s => s.category))),
+        isPublic: newSettings.isPublic ?? false,
         settings: newSettings,
         services: newServices,
         promos: newPromos,
@@ -139,6 +140,7 @@ export function OwnerDataProvider({
               profileImage: data.photo || prev.settings.profileImage,
               coverImage: data.coverImage || prev.settings.coverImage,
               telefono: data.phone || prev.settings.telefono,
+              isPublic: data.isPublic ?? data.settings?.isPublic ?? false,
             }
           }));
         }

@@ -510,6 +510,74 @@ export default function ConfiguracionView({ theme: t, onPaletteChange, currentPa
             </div>
           </motion.div>
 
+          {/* ── Card: Visibilidad del Negocio ── */}
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.1 }}
+            className="lg:col-span-2 rounded-2xl p-6 relative overflow-hidden"
+            style={{
+              ...card,
+              border: `2px solid ${form.isPublic ? '#22c55e' : t.border}`,
+            }}
+          >
+            {/* Background glow when public */}
+            {form.isPublic && (
+              <div
+                className="absolute inset-0 opacity-5 pointer-events-none"
+                style={{ background: 'linear-gradient(135deg, #22c55e, #16a34a)' }}
+              />
+            )}
+            <p style={muted} className="text-[10px] font-black uppercase tracking-widest mb-5 flex items-center gap-2">
+              <Globe size={12} /> Visibilidad del Negocio
+            </p>
+
+            <div className="flex items-center justify-between gap-6">
+              <div className="flex-1">
+                <div className="flex items-center gap-3 mb-2">
+                  <div
+                    className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                    style={{ background: form.isPublic ? 'rgba(34,197,94,0.15)' : t.accentLight }}
+                  >
+                    {form.isPublic ? (
+                      <Globe size={20} color="#22c55e" />
+                    ) : (
+                      <Lock size={20} style={{ color: t.accent }} />
+                    )}
+                  </div>
+                  <div>
+                    <p
+                      className="text-base font-black"
+                      style={{ color: form.isPublic ? '#22c55e' : t.text }}
+                    >
+                      {form.isPublic ? 'Negocio Público' : 'Negocio Privado'}
+                    </p>
+                    <p style={muted} className="text-xs">
+                      {form.isPublic
+                        ? 'Visible en el directorio — los clientes pueden reservar'
+                        : 'Oculto para clientes — solo tú puedes ver tu panel'}
+                    </p>
+                  </div>
+                </div>
+                <p style={muted} className="text-[11px] mt-3 leading-relaxed">
+                  Activa esta opción cuando tu negocio esté listo: nombre, dirección, al menos un servicio y tus horarios completos. Los clientes solo verán negocios públicos en el directorio de Steylook.
+                </p>
+              </div>
+
+              {/* Big toggle */}
+              <button
+                onClick={() => setForm((p) => ({ ...p, isPublic: !p.isPublic }))}
+                className="w-16 h-8 rounded-full transition-all duration-300 relative flex-shrink-0 shadow-inner"
+                style={{ background: form.isPublic ? '#22c55e' : t.border }}
+              >
+                <div
+                  className="w-6 h-6 bg-white rounded-full absolute top-1 transition-all duration-300 shadow-md"
+                  style={{ left: form.isPublic ? '34px' : '2px' }}
+                />
+              </button>
+            </div>
+          </motion.div>
+
           {/* ── Card: Horario ── */}
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="rounded-2xl p-6" style={card}>
             <p style={muted} className="text-[10px] font-black uppercase tracking-widest mb-5 flex items-center gap-2">

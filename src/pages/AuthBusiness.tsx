@@ -92,6 +92,35 @@ export default function AuthBusiness() {
         createdAt: new Date().toISOString(),
       });
 
+      // Create initial shops profile document
+      await setDoc(doc(db, 'shops', cred.user.uid), {
+        name: nombreNegocio || nombre,
+        type: businessType === 'barbero' ? 'barberia' : 'salon',
+        address: '',
+        phone: telefono || '',
+        description: '',
+        bio: '',
+        photo: `https://ui-avatars.com/api/?name=${encodeURIComponent(nombreNegocio || nombre)}&background=random`,
+        coverImage: '',
+        priceRange: 2,
+        categories: [],
+        services: [],
+        promos: [],
+        isPublic: false,
+        settings: {
+          shopName: nombreNegocio || nombre,
+          address: '',
+          bio: '',
+          openTime: '09:00',
+          closeTime: '18:00',
+          notifEmail: true,
+          notifWhatsapp: true,
+          notifSMS: false,
+          isPublic: false,
+        },
+        createdAt: new Date().toISOString(),
+      });
+
       navigate(businessPath);
     } catch (err: unknown) {
       const code = (err as { code?: string })?.code;
