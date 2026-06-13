@@ -342,52 +342,52 @@ export default function ClienteHome() {
         </motion.div>
 
         {/* Search Bar & Filter Toggle */}
-        <div className="flex flex-col sm:flex-row gap-4 mb-12">
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-8 sm:mb-12">
           <div className="relative flex-1">
-            <Search className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-theme-secondary" />
+            <Search className="absolute left-4 sm:left-5 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-theme-secondary" />
             <input
               type="search"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Buscar barbería, salón o tratamiento..."
-              className="w-full bg-theme-bg text-theme-text border border-theme-secondary/20 rounded-2xl sm:rounded-[1.8rem] py-4 sm:py-5 pl-12 sm:pl-14 pr-4 focus:outline-none focus:ring-4 focus:ring-theme-primary/10 font-medium shadow-sm placeholder:text-theme-text/50"
+              className="w-full bg-theme-bg text-theme-text border border-theme-secondary/20 rounded-2xl sm:rounded-[1.8rem] py-3.5 sm:py-4 md:py-5 pl-10 sm:pl-12 md:pl-14 pr-4 text-sm sm:text-base focus:outline-none focus:ring-4 focus:ring-theme-primary/10 font-medium shadow-sm placeholder:text-theme-text/50"
             />
           </div>
-          <button 
+          <button
             onClick={() => setShowFilters(!showFilters)}
             className={cn(
-              "p-5 rounded-[1.8rem] border flex items-center justify-center gap-3 font-bold transition-all",
-              showFilters 
-                ? "bg-theme-primary text-white border-theme-primary shadow-xl shadow-theme-primary/20" 
+              "p-3.5 sm:p-4 md:p-5 rounded-[1.5rem] sm:rounded-[1.8rem] border flex items-center justify-center gap-2 sm:gap-3 font-bold transition-all",
+              showFilters
+                ? "bg-theme-primary text-white border-theme-primary shadow-xl shadow-theme-primary/20"
                 : "bg-theme-bg text-theme-text border-theme-secondary/10 hover:border-theme-primary"
             )}
           >
-            <SlidersHorizontal className="w-6 h-6" />
-            <span className="sm:hidden lg:block">Filtros</span>
+            <SlidersHorizontal className="w-5 h-5 sm:w-6 sm:h-6" />
+            <span className="text-xs sm:text-sm hidden sm:block lg:block">Filtros</span>
           </button>
         </div>
 
         {/* Upcoming Appointments */}
         {appointments.length > 0 && appointments.some(a => a.status !== 'completed') && (
-          <section className="mb-12">
-            <h3 className="text-xs font-black uppercase text-theme-secondary tracking-[0.3em] mb-6">Mis Próximas Citas</h3>
-            <div className="space-y-4">
+          <section className="mb-8 sm:mb-12">
+            <h3 className="text-xs font-black uppercase text-theme-secondary tracking-[0.3em] mb-4 sm:mb-6">Mis Próximas Citas</h3>
+            <div className="space-y-3 sm:space-y-4">
               {appointments.filter(a => a.status !== 'completed' && a.status !== 'cancelled').map(app => (
-                <div key={app.id} className="p-5 sm:p-8 rounded-[1.75rem] sm:rounded-[2.5rem] bg-white dark:bg-zinc-900 border border-theme-secondary/10 shadow-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 group hover:shadow-xl transition-all">
-                  <div className="flex items-center gap-6">
-                    <div className="w-16 h-16 rounded-[1.5rem] bg-zinc-50 flex items-center justify-center text-3xl shadow-inner group-hover:scale-110 transition-transform">
+                <div key={app.id} className="p-4 sm:p-5 md:p-8 rounded-[1.5rem] sm:rounded-[1.75rem] md:rounded-[2.5rem] bg-white dark:bg-zinc-900 border border-theme-secondary/10 shadow-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 group hover:shadow-xl transition-all">
+                  <div className="flex items-center gap-3 sm:gap-4 md:gap-6">
+                    <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-[1rem] sm:rounded-[1.25rem] md:rounded-[1.5rem] bg-zinc-50 flex items-center justify-center text-2xl sm:text-3xl shadow-inner group-hover:scale-110 transition-transform shrink-0">
                       {app.shopName.includes('Barber') ? '💈' : '✂️'}
                     </div>
-                    <div>
-                      <h4 className="font-black text-xl text-zinc-900 mb-1">{app.shopName}</h4>
-                      <p className="text-sm text-theme-secondary font-bold flex items-center gap-2">
-                        <Calendar className="w-4 h-4" /> {format(new Date(app.date), 'EEEE d MMMM', { locale: es })}
+                    <div className="min-w-0">
+                      <h4 className="font-black text-base sm:text-lg md:text-xl text-zinc-900 mb-1 truncate">{app.shopName}</h4>
+                      <p className="text-xs sm:text-sm text-theme-secondary font-bold flex items-center gap-1.5 sm:gap-2">
+                        <Calendar className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" /> {format(new Date(app.date), 'EEEE d MMMM', { locale: es })}
                       </p>
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className="text-2xl font-black text-theme-primary mb-1">{app.time || '10:00'}</div>
-                    <div className="px-3 py-1 rounded-full bg-theme-secondary/10 text-theme-secondary text-[10px] font-black uppercase tracking-widest">
+                    <div className="text-xl sm:text-2xl font-black text-theme-primary mb-1">{app.time || '10:00'}</div>
+                    <div className="px-2.5 sm:px-3 py-1 rounded-full bg-theme-secondary/10 text-theme-secondary text-[9px] sm:text-[10px] font-black uppercase tracking-widest">
                       {app.status === 'pending' ? 'Pendiente' : 'Confirmada'}
                     </div>
                   </div>
@@ -399,16 +399,16 @@ export default function ClienteHome() {
 
         {/* Past Appointments to Review */}
         {appointments.length > 0 && appointments.some(a => a.status === 'completed') && (
-          <section className="mb-12">
-            <h3 className="text-xs font-black uppercase text-theme-secondary tracking-[0.3em] mb-6">Califica tu experiencia</h3>
-            <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
+          <section className="mb-8 sm:mb-12">
+            <h3 className="text-xs font-black uppercase text-theme-secondary tracking-[0.3em] mb-4 sm:mb-6">Califica tu experiencia</h3>
+            <div className="flex gap-3 sm:gap-4 overflow-x-auto pb-4 scrollbar-hide">
               {appointments.filter(a => a.status === 'completed').map(app => (
-                <div key={app.id} className="min-w-[300px] p-6 rounded-[2rem] bg-zinc-900 shadow-xl text-white">
-                  <h4 className="font-bold mb-1">{app.shopName}</h4>
-                  <p className="text-zinc-400 text-xs mb-4">{app.serviceName}</p>
-                  <button 
+                <div key={app.id} className="min-w-[280px] sm:min-w-[300px] p-4 sm:p-6 rounded-[1.5rem] sm:rounded-[2rem] bg-zinc-900 shadow-xl text-white">
+                  <h4 className="font-bold mb-1 text-sm sm:text-base truncate">{app.shopName}</h4>
+                  <p className="text-zinc-400 text-xs mb-3 sm:mb-4 truncate">{app.serviceName}</p>
+                  <button
                     onClick={() => setShowReviewForm(app.id)}
-                    className="w-full py-3 bg-theme-primary rounded-xl text-xs font-black uppercase tracking-widest hover:scale-105 transition-transform"
+                    className="w-full py-2.5 sm:py-3 bg-theme-primary rounded-xl text-[10px] sm:text-xs font-black uppercase tracking-widest hover:scale-105 transition-transform"
                   >
                     Deja una valoración
                   </button>
@@ -418,7 +418,7 @@ export default function ClienteHome() {
           </section>
         )}
 
-        <div className="flex flex-col lg:flex-row gap-10">
+        <div className="flex flex-col lg:flex-row gap-6 sm:gap-8 lg:gap-10">
           {/* Filters Sidebar */}
           <AnimatePresence>
             {showFilters && (
@@ -426,20 +426,20 @@ export default function ClienteHome() {
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: 'auto' }}
                 exit={{ opacity: 0, height: 0 }}
-                className="lg:hidden w-full overflow-hidden mb-8"
+                className="lg:hidden w-full overflow-hidden mb-6 sm:mb-8"
               >
-                <FilterPanel 
-                  filters={filters} 
+                <FilterPanel
+                  filters={filters}
                   onFilterChange={setFilters}
                   onClose={() => setShowFilters(false)}
                 />
               </motion.div>
             )}
           </AnimatePresence>
-          
-          <div className="hidden lg:block w-80 flex-shrink-0">
-            <FilterPanel 
-              filters={filters} 
+
+          <div className="hidden lg:block w-72 xl:w-80 flex-shrink-0">
+            <FilterPanel
+              filters={filters}
               onFilterChange={setFilters}
               onClose={() => {}}
             />
@@ -448,8 +448,13 @@ export default function ClienteHome() {
           {/* Shop Grid */}
           <div className="flex-1">
             {/* ── Shimmer skeleton while Firestore loads (Fase 5) ──────── */}
+<<<<<<< Updated upstream
             {loading ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-8 lg:gap-10">
+=======
+            {shops.length === 0 && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 lg:gap-8 xl:gap-10">
+>>>>>>> Stashed changes
                 {[...Array(4)].map((_, i) => (
                   <div key={i} className="rounded-[2.5rem] overflow-hidden border border-theme-secondary/10 shadow-sm">
                     <div className="shimmer-loader h-64 rounded-none" style={{ animationDelay: `${i * 0.12}s` }} />
@@ -461,6 +466,7 @@ export default function ClienteHome() {
                   </div>
                 ))}
               </div>
+<<<<<<< Updated upstream
             ) : shops.length === 0 ? (
               <div className="text-center py-20 bg-theme-bg rounded-[3rem] border border-theme-secondary/10">
                 <div className="w-20 h-20 bg-theme-secondary/10 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -473,18 +479,25 @@ export default function ClienteHome() {
               <div className="text-center py-20 bg-theme-bg rounded-[3rem] border border-theme-secondary/10">
                 <div className="w-20 h-20 bg-theme-secondary/10 rounded-full flex items-center justify-center mx-auto mb-6">
                   <Search className="w-10 h-10 text-theme-text/40" />
+=======
+            )}
+            {filteredShops.length === 0 && shops.length > 0 ? (
+              <div className="text-center py-16 sm:py-20 bg-theme-bg rounded-[2rem] sm:rounded-[3rem] border border-theme-secondary/10 px-4">
+                <div className="w-16 h-16 sm:w-20 sm:h-20 bg-theme-secondary/10 rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6">
+                  <Search className="w-8 h-8 sm:w-10 sm:h-10 text-theme-text/40" />
+>>>>>>> Stashed changes
                 </div>
-                <h3 className="text-2xl font-black text-theme-text mb-2">No encontramos resultados</h3>
-                <p className="text-theme-text/60">Prueba ajustando tus filtros de búsqueda.</p>
-                <button 
+                <h3 className="text-xl sm:text-2xl font-black text-theme-text mb-2">No encontramos resultados</h3>
+                <p className="text-sm sm:text-base text-theme-text/60">Prueba ajustando tus filtros de búsqueda.</p>
+                <button
                   onClick={() => setFilters({ category: 'Todos', minRating: 0, maxPrice: 3, onlyAvailable: false })}
-                  className="mt-8 text-theme-primary font-black uppercase tracking-widest text-sm"
+                  className="mt-6 sm:mt-8 text-theme-primary font-black uppercase tracking-widest text-xs sm:text-sm"
                 >
                   Limpiar todos los filtros
                 </button>
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-8 lg:gap-10">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 lg:gap-8 xl:gap-10">
                 {filteredShops.map((shop, i) => (
                   <motion.div
                     key={shop.id}
@@ -555,47 +568,47 @@ export default function ClienteHome() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-zinc-950/40 backdrop-blur-md flex items-end sm:items-center justify-center sm:p-6"
+            className="fixed inset-0 z-50 bg-zinc-950/40 backdrop-blur-md flex items-end sm:items-center justify-center sm:p-4 md:p-6"
           >
             <motion.div
               initial={{ y: '100%', scale: 1 }}
               animate={{ y: 0, scale: 1 }}
               exit={{ y: '100%', scale: 0.9 }}
               transition={{ type: 'spring', stiffness: 260, damping: 28 }}
-              className="bg-theme-bg w-full max-w-2xl rounded-t-[3.5rem] sm:rounded-[3.5rem] p-10 max-h-[90vh] overflow-y-auto shadow-2xl relative text-theme-text"
+              className="bg-theme-bg w-full max-w-2xl rounded-t-[2rem] sm:rounded-[3rem] p-5 sm:p-6 md:p-10 max-h-[90vh] overflow-y-auto shadow-2xl relative text-theme-text"
             >
-              <button 
+              <button
                 onClick={() => {
                   setSelectedShop(null);
                   setSelectedService(null);
                   setBookingDate(null);
                   setBookingTime('');
-                }} 
-                className="absolute top-8 right-8 p-4 bg-theme-secondary/10 rounded-full hover:bg-theme-secondary/20 transition-colors z-10"
+                }}
+                className="absolute top-4 right-4 sm:top-6 sm:right-6 md:top-8 md:right-8 p-2.5 sm:p-3 md:p-4 bg-theme-secondary/10 rounded-full hover:bg-theme-secondary/20 transition-colors z-10"
               >
-                <X className="w-6 h-6" />
+                <X className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" />
               </button>
 
-              <div className="mb-10">
-                <div className="flex items-center gap-4 mb-4">
-                  <h3 className="text-4xl font-black tracking-tight">{selectedShop.name}</h3>
-                  <button 
+              <div className="mb-6 sm:mb-8 md:mb-10">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 mb-4">
+                  <h3 className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tight">{selectedShop.name}</h3>
+                  <button
                     onClick={(e) => {
                       e.stopPropagation();
                       startChat(selectedShop);
                     }}
-                    className="p-3 bg-theme-primary/10 text-theme-primary rounded-2xl hover:bg-theme-primary hover:text-white transition-all flex items-center gap-2 font-black text-xs uppercase tracking-widest"
+                    className="p-2 sm:p-3 bg-theme-primary/10 text-theme-primary rounded-xl sm:rounded-2xl hover:bg-theme-primary hover:text-white transition-all flex items-center gap-2 font-black text-[10px] sm:text-xs uppercase tracking-widest self-start sm:self-center"
                   >
                     <MessageSquare className="w-4 h-4" /> Chat
                   </button>
                 </div>
                 <div className="flex flex-col gap-2">
-                  <div className="flex items-center gap-2 text-theme-text/60 font-medium">
-                    <MapPin className="w-4 h-4" /> {selectedShop.address}
+                  <div className="flex items-center gap-2 text-theme-text/60 font-medium text-sm">
+                    <MapPin className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> {selectedShop.address}
                   </div>
                   {selectedShop.phone && (
-                    <div className="flex items-center gap-2 text-theme-text/60 font-medium">
-                      <Phone className="w-4 h-4" /> {selectedShop.phone}
+                    <div className="flex items-center gap-2 text-theme-text/60 font-medium text-sm">
+                      <Phone className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> {selectedShop.phone}
                     </div>
                   )}
                 </div>
@@ -603,25 +616,25 @@ export default function ClienteHome() {
 
               {/* Promociones / Ofertas especiales del negocio */}
               {(selectedShop as any).promos && (selectedShop as any).promos.filter((p: any) => p.status === 'active').length > 0 && (
-                <div className="mb-10 animate-in fade-in slide-in-from-bottom-2">
-                  <h4 className="text-xs font-black uppercase tracking-[0.3em] text-theme-text/60 mb-4">Ofertas Disponibles</h4>
-                  <div className="flex flex-col gap-3">
+                <div className="mb-6 sm:mb-8 md:mb-10 animate-in fade-in slide-in-from-bottom-2">
+                  <h4 className="text-[10px] sm:text-xs font-black uppercase tracking-[0.3em] text-theme-text/60 mb-3 sm:mb-4">Ofertas Disponibles</h4>
+                  <div className="flex flex-col gap-2 sm:gap-3">
                     {(selectedShop as any).promos.filter((p: any) => p.status === 'active').map((promo: any) => (
-                      <div 
-                        key={promo.id} 
-                        className="p-5 rounded-3xl bg-amber-500/5 dark:bg-amber-500/[0.03] border border-amber-500/20 text-theme-text flex items-center justify-between gap-4"
+                      <div
+                        key={promo.id}
+                        className="p-3 sm:p-4 md:p-5 rounded-2xl sm:rounded-3xl bg-amber-500/5 dark:bg-amber-500/[0.03] border border-amber-500/20 text-theme-text flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4"
                       >
-                        <div className="flex items-center gap-4">
-                          <span className="bg-amber-500 text-black text-[9px] px-2.5 py-1 rounded-xl font-black uppercase tracking-wider shrink-0 shadow-sm">
+                        <div className="flex items-center gap-3 sm:gap-4">
+                          <span className="bg-amber-500 text-black text-[9px] px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg sm:rounded-xl font-black uppercase tracking-wider shrink-0 shadow-sm">
                             OFERTA
                           </span>
                           <div>
-                            <p className="font-black text-base leading-tight text-zinc-900 dark:text-white">{promo.title}</p>
+                            <p className="font-black text-sm sm:text-base leading-tight text-zinc-900 dark:text-white">{promo.title}</p>
                             <p className="text-xs text-theme-text/60 mt-1">Vence el {format(new Date(promo.expires), 'd MMM', { locale: es })}</p>
                           </div>
                         </div>
                         <div className="text-right shrink-0">
-                          <p className="text-lg font-black text-amber-500">{promo.discount}</p>
+                          <p className="text-base sm:text-lg font-black text-amber-500">{promo.discount}</p>
                           <p className="text-[10px] font-mono font-bold bg-amber-500/10 px-2 py-0.5 rounded-lg text-amber-500 inline-block mt-1">
                             {promo.code}
                           </p>
@@ -633,58 +646,58 @@ export default function ClienteHome() {
               )}
 
               {/* Works Carousel */}
-              <div className="mb-10">
-                <h4 className="text-xs font-black uppercase tracking-[0.3em] text-theme-text/60 mb-6">Nuestros Trabajos</h4>
+              <div className="mb-6 sm:mb-8 md:mb-10">
+                <h4 className="text-[10px] sm:text-xs font-black uppercase tracking-[0.3em] text-theme-text/60 mb-4 sm:mb-6">Nuestros Trabajos</h4>
                 <WorkCarousel type={selectedShop.type} />
               </div>
 
               {!selectedService ? (
-                <div className="space-y-12">
-                  <div className="space-y-6">
-                    <h4 className="text-xs font-black uppercase tracking-[0.3em] text-theme-text/60 mb-4">Selecciona un Servicio</h4>
-                    <div className="grid grid-cols-1 gap-4">
+                <div className="space-y-8 sm:space-y-12">
+                  <div className="space-y-4 sm:space-y-6">
+                    <h4 className="text-[10px] sm:text-xs font-black uppercase tracking-[0.3em] text-theme-text/60 mb-3 sm:mb-4">Selecciona un Servicio</h4>
+                    <div className="grid grid-cols-1 gap-3 sm:gap-4">
                       {services.map(service => (
                         <button
                           key={service.id}
                           onClick={() => setSelectedService(service)}
-                          className="w-full flex items-center justify-between p-7 rounded-[2rem] bg-theme-secondary/10 hover:bg-theme-secondary/20 transition-all border-2 border-transparent hover:border-theme-secondary/30 text-left group"
+                          className="w-full flex items-center justify-between p-4 sm:p-5 md:p-7 rounded-[1.5rem] sm:rounded-[2rem] bg-theme-secondary/10 hover:bg-theme-secondary/20 transition-all border-2 border-transparent hover:border-theme-secondary/30 text-left group"
                         >
-                          <div>
-                            <div className="font-black text-xl mb-1 group-hover:text-theme-primary transition-colors">{service.name}</div>
-                            <div className="text-theme-text/60 text-sm font-bold flex items-center gap-2">
-                              <Clock className="w-4 h-4" /> {service.duration} minutos
+                          <div className="flex-1 min-w-0">
+                            <div className="font-black text-base sm:text-lg md:text-xl mb-1 group-hover:text-theme-primary transition-colors truncate">{service.name}</div>
+                            <div className="text-theme-text/60 text-xs sm:text-sm font-bold flex items-center gap-1.5 sm:gap-2">
+                              <Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" /> {service.duration} minutos
                             </div>
                           </div>
-                          <div className="text-right">
-                            <div className="text-2xl font-black text-theme-primary">{formatCurrency(service.price)}</div>
-                            <div className="text-[10px] font-black text-theme-primary uppercase tracking-[0.2em] opacity-0 group-hover:opacity-100 transition-all translate-y-2 group-hover:translate-y-0">Reservar</div>
+                          <div className="text-right shrink-0">
+                            <div className="text-xl sm:text-2xl font-black text-theme-primary">{formatCurrency(service.price)}</div>
+                            <div className="text-[9px] sm:text-[10px] font-black text-theme-primary uppercase tracking-[0.2em] opacity-0 group-hover:opacity-100 transition-all translate-y-2 group-hover:translate-y-0">Reservar</div>
                           </div>
                         </button>
                       ))}
                     </div>
                   </div>
 
-                  <div className="space-y-6">
-                    <h4 className="text-xs font-black uppercase tracking-[0.3em] text-theme-text/60 mb-4">Reseñas de Clientes</h4>
+                  <div className="space-y-4 sm:space-y-6">
+                    <h4 className="text-[10px] sm:text-xs font-black uppercase tracking-[0.3em] text-theme-text/60 mb-3 sm:mb-4">Reseñas de Clientes</h4>
                     <ReviewList shopId={selectedShop.id} />
                   </div>
                 </div>
               ) : !bookingDate ? (
-                <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
-                  <button onClick={() => setSelectedService(null)} className="inline-flex items-center gap-2 px-6 py-2 rounded-full bg-theme-secondary/10 text-theme-text/70 text-xs font-black uppercase tracking-widest hover:bg-theme-secondary/20 transition-colors">
-                    <ArrowLeft className="w-4 h-4" /> {selectedService.name}
+                <div className="space-y-6 sm:space-y-8 animate-in fade-in slide-in-from-bottom-4">
+                  <button onClick={() => setSelectedService(null)} className="inline-flex items-center gap-2 px-4 sm:px-6 py-2 rounded-full bg-theme-secondary/10 text-theme-text/70 text-[10px] sm:text-xs font-black uppercase tracking-widest hover:bg-theme-secondary/20 transition-colors">
+                    <ArrowLeft className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> <span className="truncate max-w-[200px]">{selectedService.name}</span>
                   </button>
-                  <h4 className="text-xs font-black uppercase tracking-[0.3em] text-theme-text/60">Selecciona fecha</h4>
+                  <h4 className="text-[10px] sm:text-xs font-black uppercase tracking-[0.3em] text-theme-text/60">Selecciona fecha</h4>
                   <GoogleCalendar 
                     selectedDate={bookingDate}
                     onDateSelect={(date) => setBookingDate(date)}
                   />
                 </div>
               ) : (
-                <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4">
+                <div className="space-y-8 sm:space-y-10 animate-in fade-in slide-in-from-bottom-4">
                    <div className="flex items-center justify-between">
-                    <button onClick={() => setBookingDate(null)} className="inline-flex items-center gap-2 px-6 py-2 rounded-full bg-theme-secondary/10 text-theme-text/70 text-xs font-black uppercase tracking-widest hover:bg-theme-secondary/20 transition-colors">
-                      <Calendar className="w-4 h-4" /> {format(bookingDate, 'd MMMM', { locale: es })}
+                    <button onClick={() => setBookingDate(null)} className="inline-flex items-center gap-2 px-4 sm:px-6 py-2 rounded-full bg-theme-secondary/10 text-theme-text/70 text-[10px] sm:text-xs font-black uppercase tracking-widest hover:bg-theme-secondary/20 transition-colors">
+                      <Calendar className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> {format(bookingDate, 'd MMMM', { locale: es })}
                     </button>
                     <div className="text-right">
                       <p className="text-[10px] font-black text-theme-text/60 uppercase tracking-widest">Resumen</p>
@@ -692,8 +705,8 @@ export default function ClienteHome() {
                     </div>
                   </div>
 
-                  <div className="space-y-6">
-                    <h4 className="text-xs font-black uppercase tracking-[0.3em] text-theme-text/60">Horarios Disponibles</h4>
+                  <div className="space-y-4 sm:space-y-6">
+                    <h4 className="text-[10px] sm:text-xs font-black uppercase tracking-[0.3em] text-theme-text/60">Horarios Disponibles</h4>
 
                     {/* ── Time-of-day Tabs ────────────────────────────────── */}
                     {(() => {
