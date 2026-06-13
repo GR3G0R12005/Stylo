@@ -18,7 +18,7 @@ import SaloneraDashboard from './pages/salon/Dashboard';
 function ProtectedRoute({ children, allowedRoles }: { children: React.ReactNode, allowedRoles?: string[] }) {
   const { user, profile, loading } = useAuth();
 
-  if (loading) return (
+  if (loading || (user && !profile)) return (
     <div className="h-screen w-screen flex items-center justify-center bg-black text-white">
       <div className="animate-pulse text-2xl font-light tracking-widest text-center">
         STEYLOOK<br />
@@ -40,7 +40,9 @@ function ProtectedRoute({ children, allowedRoles }: { children: React.ReactNode,
   }
 
   if (allowedRoles && profile && !allowedRoles.includes(profile.tipo)) {
-    return <Navigate to="/" />;
+    if (profile.tipo === 'barbero') return <Navigate to="/barbero" replace />;
+    if (profile.tipo === 'salonera') return <Navigate to="/salon" replace />;
+    return <Navigate to="/cliente" replace />;
   }
 
   return <>{children}</>;
