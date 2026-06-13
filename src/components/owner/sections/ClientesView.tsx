@@ -24,10 +24,32 @@ export default function ClientesView({ theme: t, onNavigate }: Props) {
   const accent = { color: t.accent };
 
   const handleExportCSV = () => {
-    const headers = ['ID', 'Nombre', 'Visitas', 'Ultima Visita', 'Gastado', 'Rating'];
-    const rows = filtered.map((c) => [c.id, c.name, c.visits, c.lastVisit, c.spent, c.rating]);
-    const csvContent =
-      'data:text/csv;charset=utf-8,' + headers.join(',') + '\n' + rows.map((e) => e.join(',')).join('\n');
+    const lines: string[] = [];
+
+    // Título y Fecha
+    lines.push('BASE DE DATOS DE CLIENTES - STEYLOOK');
+    lines.push(`Fecha de exportación:;${new Date().toLocaleDateString('es-ES')}`);
+    lines.push('');
+
+    // Resumen General
+    const activeThisMonth = clients.filter((c) => c.lastVisit.startsWith(monthStr)).length;
+    const vipCount = clients.filter((c) => c.visits >= 10).length;
+
+    lines.push('--- RESUMEN ---');
+    lines.push('Total Clientes;Activos (Mes);Clientes VIP (10+ visitas)');
+    lines.push(`${clients.length};${activeThisMonth};${vipCount}`);
+    lines.push('');
+
+    // Detalle de Clientes
+    lines.push('--- LISTADO DE CLIENTES ---');
+    lines.push('ID;Nombre;Visitas;Ultima Visita;Gastado (USD);Rating');
+    
+    filtered.forEach((c) => {
+      lines.push(`${c.id};${c.name};${c.visits};${c.lastVisit};${c.spent};${c.rating}`);
+    });
+
+    // Añadimos BOM (\uFEFF) para correcta codificación de acentos en Excel
+    const csvContent = 'data:text/csv;charset=utf-8,\uFEFF' + lines.join('\n');
     const link = document.createElement('a');
     link.href = encodeURI(csvContent);
     link.download = `clientes_${t.role}_${new Date().toISOString().split('T')[0]}.csv`;
