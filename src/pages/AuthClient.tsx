@@ -5,6 +5,7 @@ import { LogIn, UserPlus, ArrowLeft, Mail, Lock, User, Phone, Eye, EyeOff } from
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { auth, db } from '../lib/firebase';
 import { doc, setDoc } from 'firebase/firestore';
+import { fetchUserRole, getRolePath } from '../lib/authHelpers';
 
 export default function AuthClient() {
   const navigate = useNavigate();
@@ -23,8 +24,16 @@ export default function AuthClient() {
     setError('');
 
     try {
-      await signInWithEmailAndPassword(auth, email.trim().toLowerCase(), password);
-      navigate('/cliente');
+      const cred = await signInWithEmailAndPassword(auth, email.trim().toLowerCase(), password);
+      const tipo = await fetchUserRole(cred.user.uid);
+
+      if (tipo === 'barbero' || tipo === 'salonera') {
+        await auth.signOut();
+        setError('Esta cuenta es de negocio. Usa el acceso de barbería o salón.');
+        return;
+      }
+
+      navigate(getRolePath('cliente'));
     } catch (err: unknown) {
       const code = (err as { code?: string })?.code;
       const messages: Record<string, string> = {
