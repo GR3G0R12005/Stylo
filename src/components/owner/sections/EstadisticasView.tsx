@@ -61,15 +61,51 @@ export default function EstadisticasView({ theme: t }: Props) {
   const accent = { color: t.accent };
 
   const handleExportReport = () => {
-    const headers = ['Mes', 'Ingresos (USD)'];
-    const csvContent =
-      'data:text/csv;charset=utf-8,' +
-      headers.join(',') +
-      '\n' +
-      monthly.map((m) => `${m.m},${m.v}`).join('\n');
+    const lines: string[] = [];
+
+    // Título y Fecha
+    lines.push('REPORTE FINANCIERO Y DE ESTADÍSTICAS - STEYLOOK');
+    lines.push(`Fecha de generación:;${new Date().toLocaleDateString('es-ES')}`);
+    lines.push('');
+
+    // Resumen General
+    lines.push('--- RESUMEN GENERAL ---');
+    lines.push('Ingresos Totales (USD);Ticket Promedio (USD);Citas Completadas;Servicios Activos;Satisfacción Promedio');
+    lines.push(`${totalRevenue};${avgTicket};${completed.length};${services.length};${avgRating}`);
+    lines.push('');
+
+    // Resumen Mensual
+    lines.push('--- INGRESOS MENSUALES (Ultimos 6 meses) ---');
+    lines.push('Mes;Ingresos (USD)');
+    monthly.forEach(m => lines.push(`${m.m};${m.v}`));
+    lines.push('');
+
+    // Top Servicios
+    lines.push('--- SERVICIOS MAS POPULARES ---');
+    lines.push('Servicio;Citas;Porcentaje');
+    servicePop.forEach(s => lines.push(`${s.name};${s.count};${s.pct}%`));
+    lines.push('');
+
+    // Detalle
+    if (transactions && transactions.length > 0) {
+      lines.push('--- DETALLE DE TRANSACCIONES ---');
+      lines.push('Fecha;Cliente;Servicio;Monto (USD);Metodo de Pago;Tipo');
+      transactions.forEach(tx => {
+        lines.push(`${tx.date};${tx.client};${tx.service};${tx.amount};${tx.method};${tx.type === 'in' ? 'Ingreso' : 'Egreso'}`);
+      });
+    } else {
+      lines.push('--- DETALLE DE CITAS (Completadas/Confirmadas) ---');
+      lines.push('Fecha;Hora;Cliente;Servicio;Precio (USD);Estado');
+      completed.forEach(c => {
+        lines.push(`${c.date};${c.time};${c.clientName};${c.service};${c.price};${c.status === 'completed' ? 'Completada' : 'Confirmada'}`);
+      });
+    }
+
+    // Se añade \uFEFF (BOM) para correcta codificación en Excel
+    const csvContent = 'data:text/csv;charset=utf-8,\uFEFF' + lines.join('\n');
     const link = document.createElement('a');
     link.href = encodeURI(csvContent);
-    link.download = `reporte_${t.role}_${new Date().toISOString().split('T')[0]}.csv`;
+    link.download = `reporte_financiero_${t.role}_${new Date().toISOString().split('T')[0]}.csv`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
