@@ -1,13 +1,17 @@
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Lock, X, AlertTriangle, Check } from 'lucide-react';
+import { Lock, X, AlertTriangle, Check, UserCog } from 'lucide-react';
 import { OwnerTheme } from '../ownerTheme';
 import { useOwnerData } from '../../../context/OwnerDataContext';
-import type { BlockedSlot } from '../../../data/ownerSeed';
+import {
+  SCHEDULE_HOURS,
+  dateToWeekday,
+  isEmployeeWorkingAt,
+  isEmployeeWorkingOnDate,
+  type BlockedSlot,
+} from '../../../data/ownerSeed';
 
 interface Props { theme: OwnerTheme; }
-
-const HOURS = ['08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00'];
 
 function getWeekDays(): { key: string; label: string; date: string }[] {
   const days = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
@@ -25,11 +29,64 @@ function getWeekDays(): { key: string; label: string; date: string }[] {
 interface ModalState { day: string; hour: string; }
 
 export default function HorariosView({ theme: t }: Props) {
-  const { appointments, blockedSlots, blockSlot, unblockSlot, today } = useOwnerData();
-  const weekDays = useMemo(() => getWeekDays(), []);
+  const { appointments, blockedSlots, blockSlot, unblockSlot, today, employees } = useOwnerData();
+  const allWeekDays = useMemo(() => getWeekDays(), []);
+  const [selectedEmployeeId, setSelectedEmployeeId] = useState<string>('all');
   const [modal, setModal] = useState<ModalState | null>(null);
   const [reason, setReason] = useState('');
   const [blockOnwards, setBlockOnwards] = useState(false);
+
+  const activeEmployees = useMemo(
+    () => employees.filter((e) => e.active),
+    [employees],
+  );
+
+  const selectedEmployee = useMemo(
+    () => (selectedEmployeeId === 'all' ? null : activeEmployees.find((e) => e.id === selectedEmployeeId) ?? null),
+    [selectedEmployeeId, activeEmployees],
+  );
+
+  const weekDays = useMemo(() => {
+    if (selectedEmployee) {
+      return allWeekDays.filter((d) => isEmployeeWorkingOnDate(selectedEmployee, d.date));
+    }
+    return allWeekDays.filter((d) =>
+      activeEmployees.some((e) => isEmployeeWorkingOnDate(e, d.date)),
+    );
+  }, [allWeekDays, selectedEmployee, activeEmployees]);
+
+  const visibleHours = useMemo(() => {
+    if (weekDays.length === 0) return [];
+
+    if (selectedEmployee) {
+      let minStart = '23:59';
+      let maxEnd = '00:00';
+      weekDays.forEach((d) => {
+        const dayKey = dateToWeekday(d.date);
+        const sched = selectedEmployee.schedule[dayKey];
+        if (sched?.enabled) {
+          if (sched.startTime < minStart) minStart = sched.startTime;
+          if (sched.endTime > maxEnd) maxEnd = sched.endTime;
+        }
+      });
+      return SCHEDULE_HOURS.filter((h) => h >= minStart && h < maxEnd);
+    }
+
+    let minStart = '23:59';
+    let maxEnd = '00:00';
+    weekDays.forEach((d) => {
+      activeEmployees.forEach((e) => {
+        if (!isEmployeeWorkingOnDate(e, d.date)) return;
+        const dayKey = dateToWeekday(d.date);
+        const sched = e.schedule[dayKey];
+        if (sched?.enabled) {
+          if (sched.startTime < minStart) minStart = sched.startTime;
+          if (sched.endTime > maxEnd) maxEnd = sched.endTime;
+        }
+      });
+    });
+    return SCHEDULE_HOURS.filter((h) => h >= minStart && h < maxEnd);
+  }, [weekDays, selectedEmployee, activeEmployees]);
 
   const bookedByDayHour = useMemo(() => {
     const map: Record<string, Set<string>> = {};
@@ -45,6 +102,13 @@ export default function HorariosView({ theme: t }: Props) {
   const card = { background: t.cardBg, border: `1px solid ${t.border}` };
   const muted = { color: t.textMuted };
 
+  const isWithinSchedule = (day: string, hour: string) => {
+    if (selectedEmployee) {
+      return isEmployeeWorkingAt(selectedEmployee, day, hour);
+    }
+    return activeEmployees.some((e) => isEmployeeWorkingAt(e, day, hour));
+  };
+
   const isBlocked = (day: string, hour: string) => !!blockedSlots[day]?.[hour];
   const isBooked = (day: string, hour: string) => bookedByDayHour[day]?.has(hour);
 
@@ -55,7 +119,7 @@ export default function HorariosView({ theme: t }: Props) {
       modal.hour,
       { reason: reason || 'No disponible', fromOnwards: blockOnwards },
       blockOnwards,
-      HOURS,
+      visibleHours,
     );
     setModal(null);
     setReason('');
@@ -73,15 +137,38 @@ export default function HorariosView({ theme: t }: Props) {
         <p style={muted} className="text-xs font-bold uppercase tracking-widest mb-1">Disponibilidad</p>
         <h2 style={{ color: t.text }} className="text-3xl font-black">Horarios</h2>
         <p style={muted} className="text-sm mt-1">
-          Clic en horario libre para bloquear. Clic en bloqueado para liberar.
+          Los días desactivados en el horario del empleado no aparecen aquí. Clic en horario libre para bloquear.
         </p>
       </motion.div>
+
+      <div className="flex flex-wrap items-center gap-3 mb-6">
+        <div className="flex items-center gap-2">
+          <UserCog size={14} style={muted} />
+          <select
+            value={selectedEmployeeId}
+            onChange={(e) => setSelectedEmployeeId(e.target.value)}
+            className="px-4 py-2.5 rounded-xl text-sm font-bold outline-none"
+            style={{ background: t.inputBg, border: `1px solid ${t.border}`, color: t.text }}
+          >
+            <option value="all">Todos los empleados</option>
+            {activeEmployees.map((e) => (
+              <option key={e.id} value={e.id}>{e.name}</option>
+            ))}
+          </select>
+        </div>
+        {selectedEmployee && (
+          <span className="text-xs font-bold px-3 py-1.5 rounded-full" style={{ background: t.accentLight, color: t.accent }}>
+            {weekDays.length} día{weekDays.length !== 1 ? 's' : ''} laborable{weekDays.length !== 1 ? 's' : ''} esta semana
+          </span>
+        )}
+      </div>
 
       <div className="flex flex-wrap items-center gap-4 mb-6">
         {[
           { color: t.accentLight, border: t.accent, textColor: t.accent, label: 'Disponible' },
           { color: 'rgba(239,68,68,0.12)', border: '#ef4444', textColor: '#ef4444', label: 'Bloqueado' },
           { color: 'rgba(99,102,241,0.12)', border: '#6366f1', textColor: '#6366f1', label: 'Reservado' },
+          { color: 'rgba(161,161,170,0.12)', border: '#71717a', textColor: '#71717a', label: 'Fuera de horario' },
         ].map((l) => (
           <div key={l.label} className="flex items-center gap-2">
             <span className="w-5 h-5 rounded-md" style={{ background: l.color, border: `1.5px solid ${l.border}` }} />
@@ -95,72 +182,106 @@ export default function HorariosView({ theme: t }: Props) {
         )}
       </div>
 
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="rounded-2xl overflow-hidden" style={card}>
-        <div className="overflow-x-auto">
-          <table className="w-full" style={{ minWidth: '700px' }}>
-            <thead>
-              <tr style={{ borderBottom: `1px solid ${t.border}` }}>
-                <th className="p-4 text-left w-20">
-                  <span style={muted} className="text-[10px] font-black uppercase tracking-widest">Hora</span>
-                </th>
-                {weekDays.map((day) => (
-                  <th key={day.key} className="p-4 text-center">
-                    <span
-                      style={{ color: day.date === today ? t.accent : t.textMuted }}
-                      className="text-xs font-black"
-                    >
-                      {day.label}
-                    </span>
+      {weekDays.length === 0 ? (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="rounded-2xl p-10 text-center"
+          style={card}
+        >
+          <AlertTriangle size={32} style={{ color: t.accent, margin: '0 auto 12px' }} />
+          <p style={{ color: t.text }} className="font-black text-lg mb-2">Sin días laborables</p>
+          <p style={muted} className="text-sm">
+            {selectedEmployee
+              ? `${selectedEmployee.name} no tiene días activos en su horario. Edítalo en Empleados.`
+              : 'Ningún empleado activo tiene días configurados esta semana.'}
+          </p>
+        </motion.div>
+      ) : (
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="rounded-2xl overflow-hidden" style={card}>
+          <div className="overflow-x-auto">
+            <table className="w-full" style={{ minWidth: '700px' }}>
+              <thead>
+                <tr style={{ borderBottom: `1px solid ${t.border}` }}>
+                  <th className="p-4 text-left w-20">
+                    <span style={muted} className="text-[10px] font-black uppercase tracking-widest">Hora</span>
                   </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {HOURS.map((hour, hi) => (
-                <tr key={hour} style={{ borderBottom: hi < HOURS.length - 1 ? `1px solid ${t.border}` : 'none' }}>
-                  <td className="p-3 pl-4">
-                    <span style={muted} className="text-xs font-black font-mono">{hour}</span>
-                  </td>
-                  {weekDays.map((day) => {
-                    const blockedInfo = blockedSlots[day.key]?.[hour];
-                    const booked = isBooked(day.key, hour);
-                    const isBlock = !!blockedInfo;
-                    let bg = t.isDark ? 'rgba(255,255,255,0.03)' : '#F9F9FB';
-                    let borderColor = t.border;
-                    let cursor = 'pointer';
-                    if (booked) { bg = 'rgba(99,102,241,0.12)'; borderColor = '#6366f1'; cursor = 'default'; }
-                    if (isBlock) { bg = 'rgba(239,68,68,0.12)'; borderColor = '#ef4444'; }
-                    return (
-                      <td key={day.key} className="p-2 text-center">
-                        <motion.button
-                          whileHover={!booked ? { scale: 1.05 } : {}}
-                          whileTap={!booked ? { scale: 0.95 } : {}}
-                          disabled={booked}
-                          onClick={() => (isBlock ? unblockSlot(day.key, hour) : setModal({ day: day.key, hour }))}
-                          className="w-full h-10 rounded-xl flex items-center justify-center gap-1 text-xs font-bold transition-all disabled:cursor-default"
-                          style={{ background: bg, border: `1.5px solid ${borderColor}`, cursor }}
-                          title={isBlock ? `Bloqueado: ${blockedInfo?.reason}` : booked ? 'Reservado' : 'Clic para bloquear'}
-                        >
-                          {booked ? (
-                            <span style={{ color: '#6366f1' }} className="text-[10px] font-black">●</span>
-                          ) : isBlock ? (
-                            <>
-                              <Lock size={12} style={{ color: '#ef4444' }} />
-                              <span style={{ color: '#ef4444' }} className="text-[10px] truncate max-w-[50px]">{blockedInfo?.reason}</span>
-                            </>
-                          ) : (
-                            <span style={{ color: t.textMuted }} className="text-[10px] opacity-40">Libre</span>
-                          )}
-                        </motion.button>
-                      </td>
-                    );
-                  })}
+                  {weekDays.map((day) => (
+                    <th key={day.key} className="p-4 text-center">
+                      <span
+                        style={{ color: day.date === today ? t.accent : t.textMuted }}
+                        className="text-xs font-black"
+                      >
+                        {day.label}
+                      </span>
+                    </th>
+                  ))}
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </motion.div>
+              </thead>
+              <tbody>
+                {visibleHours.map((hour, hi) => (
+                  <tr key={hour} style={{ borderBottom: hi < visibleHours.length - 1 ? `1px solid ${t.border}` : 'none' }}>
+                    <td className="p-3 pl-4">
+                      <span style={muted} className="text-xs font-black font-mono">{hour}</span>
+                    </td>
+                    {weekDays.map((day) => {
+                      const withinSchedule = isWithinSchedule(day.key, hour);
+                      const blockedInfo = blockedSlots[day.key]?.[hour];
+                      const booked = isBooked(day.key, hour);
+                      const isBlock = !!blockedInfo;
+
+                      if (!withinSchedule) {
+                        return (
+                          <td key={day.key} className="p-2 text-center">
+                            <div
+                              className="w-full h-10 rounded-xl flex items-center justify-center text-[10px] font-bold opacity-50"
+                              style={{ background: 'rgba(161,161,170,0.08)', border: `1.5px solid ${t.border}`, color: '#71717a' }}
+                              title="Fuera del horario del empleado"
+                            >
+                              —
+                            </div>
+                          </td>
+                        );
+                      }
+
+                      let bg = t.isDark ? 'rgba(255,255,255,0.03)' : '#F9F9FB';
+                      let borderColor = t.border;
+                      let cursor = 'pointer';
+                      if (booked) { bg = 'rgba(99,102,241,0.12)'; borderColor = '#6366f1'; cursor = 'default'; }
+                      if (isBlock) { bg = 'rgba(239,68,68,0.12)'; borderColor = '#ef4444'; }
+
+                      return (
+                        <td key={day.key} className="p-2 text-center">
+                          <motion.button
+                            whileHover={!booked ? { scale: 1.05 } : {}}
+                            whileTap={!booked ? { scale: 0.95 } : {}}
+                            disabled={booked}
+                            onClick={() => (isBlock ? unblockSlot(day.key, hour) : setModal({ day: day.key, hour }))}
+                            className="w-full h-10 rounded-xl flex items-center justify-center gap-1 text-xs font-bold transition-all disabled:cursor-default"
+                            style={{ background: bg, border: `1.5px solid ${borderColor}`, cursor }}
+                            title={isBlock ? `Bloqueado: ${blockedInfo?.reason}` : booked ? 'Reservado' : 'Clic para bloquear'}
+                          >
+                            {booked ? (
+                              <span style={{ color: '#6366f1' }} className="text-[10px] font-black">●</span>
+                            ) : isBlock ? (
+                              <>
+                                <Lock size={12} style={{ color: '#ef4444' }} />
+                                <span style={{ color: '#ef4444' }} className="text-[10px] truncate max-w-[50px]">{blockedInfo?.reason}</span>
+                              </>
+                            ) : (
+                              <span style={{ color: t.textMuted }} className="text-[10px] opacity-40">Libre</span>
+                            )}
+                          </motion.button>
+                        </td>
+                      );
+                    })}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </motion.div>
+      )}
 
       <AnimatePresence>
         {modal && (
