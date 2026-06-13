@@ -9,13 +9,12 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   Save, Camera, Globe, Bell, Palette, RotateCcw, Lock,
-  Upload, ImageIcon, CheckCircle2, AlertCircle, Loader2, X,
+  Upload, ImageIcon, CheckCircle2, AlertCircle, X,
 } from 'lucide-react';
 import { OwnerTheme, BARBER_PALETTES, SALON_PALETTES } from '../ownerTheme';
 import { useAuth } from '../../../context/AuthContext';
 import { useOwnerData } from '../../../context/OwnerDataContext';
 import ImageCropperModal from '../ImageCropperModal';
-import { useImageUpload } from '../../../hooks/useImageUpload';
 import type { UploadSlot } from '../../../hooks/useImageUpload';
 
 interface Props {
@@ -24,25 +23,11 @@ interface Props {
   currentPalette?: string;
 }
 
-// ── Small helpers ─────────────────────────────────────────────────────────────
-
-const MAX_MB = 5;
-
-function dataUrlToBlob(dataUrl: string): Blob {
-  const [header, data] = dataUrl.split(',');
-  const mime = header.match(/:(.*?);/)?.[1] ?? 'image/jpeg';
-  const binary = atob(data);
-  const arr = new Uint8Array(binary.length);
-  for (let i = 0; i < binary.length; i++) arr[i] = binary.charCodeAt(i);
-  return new Blob([arr], { type: mime });
-}
-
 // ── Main component ────────────────────────────────────────────────────────────
 
 export default function ConfiguracionView({ theme: t, onPaletteChange, currentPalette }: Props) {
   const { profile, signOut } = useAuth();
   const { settings, saveSettings, resetData } = useOwnerData();
-  const { states: uploadStates, uploadBlob, validateFile, clearError } = useImageUpload(t.role);
 
   // ── Form state ──────────────────────────────────────────────────────────────
   const [saved, setSaved] = useState(false);
@@ -58,6 +43,14 @@ export default function ConfiguracionView({ theme: t, onPaletteChange, currentPa
     profileImage: settings.profileImage ?? '',
     coverImage: settings.coverImage ?? '',
   });
+
+  // Keep croppedPreview in sync when settings load from Firestore
+  useEffect(() => {
+    setCroppedPreview({
+      profileImage: settings.profileImage ?? '',
+      coverImage: settings.coverImage ?? '',
+    });
+  }, [settings.profileImage, settings.coverImage]);
   
   // Custom Toast state
   const [toastMsg, setToastMsg] = useState<{title: string, type: 'success'|'error'} | null>(null);
@@ -80,7 +73,6 @@ export default function ConfiguracionView({ theme: t, onPaletteChange, currentPa
 
   // Open native file picker for a given slot
   const openPicker = (slot: UploadSlot) => {
-    clearError(slot);
     if (slot === 'profileImage') profileInputRef.current?.click();
     else coverInputRef.current?.click();
   };
@@ -93,10 +85,13 @@ export default function ConfiguracionView({ theme: t, onPaletteChange, currentPa
       // reset input so same file can be re-selected
       e.target.value = '';
 
-      const err = validateFile(file);
-      if (err) {
-        // Show error inline — abusing the slot error state via a quick trick
-        alert(err);
+      // Basic validation
+      if (!file.type.startsWith('image/')) {
+        alert('El archivo debe ser una imagen');
+        return;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        alert('La imagen no puede superar 5 MB');
         return;
       }
 
@@ -108,29 +103,32 @@ export default function ConfiguracionView({ theme: t, onPaletteChange, currentPa
       };
       reader.readAsDataURL(file);
     },
-    [validateFile],
+    [],
   );
 
-  // Cropper confirmed → convert dataURL to blob → upload → save URL in form
+  // Cropper confirmed → save data URL directly (no Firebase Storage needed)
   const onCropConfirm = useCallback(
-    async (croppedDataUrl: string) => {
+    (croppedDataUrl: string) => {
       setCropperOpen(false);
 
-      // Show local preview immediately
+      // Update preview and form state immediately
       setCroppedPreview((prev) => ({ ...prev, [cropperSlot]: croppedDataUrl }));
 
-      const blob = dataUrlToBlob(croppedDataUrl);
-      try {
-        const url = await uploadBlob(blob, cropperSlot);
-        // Persist URL in settings form and save right away so it's reflected everywhere
-        setForm((prev) => ({ ...prev, [cropperSlot]: url }));
-        saveSettings({ ...form, [cropperSlot]: url });
-        showToast(cropperSlot === 'profileImage' ? 'Foto de perfil actualizada exitosamente' : 'Portada actualizada exitosamente', 'success');
-      } catch (e: any) {
-        showToast(`Error al subir imagen: ${e.message}`, 'error');
-      }
+      // Save the data URL directly into form and persist to Firestore via saveSettings
+      setForm((prev) => {
+        const nextForm = { ...prev, [cropperSlot]: croppedDataUrl };
+        saveSettings(nextForm);
+        return nextForm;
+      });
+
+      showToast(
+        cropperSlot === 'profileImage'
+          ? 'Foto de perfil actualizada'
+          : 'Portada actualizada',
+        'success',
+      );
     },
-    [cropperSlot, uploadBlob, form, saveSettings],
+    [cropperSlot, saveSettings],
   );
 
   // Remove an image
@@ -203,7 +201,6 @@ export default function ConfiguracionView({ theme: t, onPaletteChange, currentPa
     aspect: number;
     isCircular: boolean;
   }) => {
-    const us = uploadStates[slot];
     const preview = croppedPreview[slot] || form[slot] || '';
 
     return (
@@ -227,7 +224,6 @@ export default function ConfiguracionView({ theme: t, onPaletteChange, currentPa
                   border: `2px solid ${t.accent}`,
                   maxHeight: isCircular ? 120 : 160,
                   maxWidth: isCircular ? 120 : '100%',
-                  display: isCircular ? 'block' : 'block',
                 }}
               />
               {/* Remove button */}
@@ -254,38 +250,11 @@ export default function ConfiguracionView({ theme: t, onPaletteChange, currentPa
           )}
         </div>
 
-        {/* Upload progress */}
+        {/* Success flash after saving */}
         <AnimatePresence>
-          {us.uploading && (
+          {preview && (
             <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              className="overflow-hidden"
-            >
-              <div className="flex items-center gap-2 mb-1">
-                <Loader2 size={12} style={{ color: t.accent }} className="animate-spin" />
-                <span style={{ color: t.textMuted }} className="text-[11px] font-medium">
-                  Subiendo... {us.progress}%
-                </span>
-              </div>
-              <div className="h-1.5 rounded-full overflow-hidden" style={{ background: t.accentLight }}>
-                <motion.div
-                  className="h-full rounded-full"
-                  style={{ background: t.accent }}
-                  initial={{ width: 0 }}
-                  animate={{ width: `${us.progress}%` }}
-                  transition={{ duration: 0.3 }}
-                />
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Success flash */}
-        <AnimatePresence>
-          {!us.uploading && us.progress === 100 && (
-            <motion.div
+              key={preview.slice(0, 20)}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
@@ -297,30 +266,8 @@ export default function ConfiguracionView({ theme: t, onPaletteChange, currentPa
           )}
         </AnimatePresence>
 
-        {/* Error message */}
-        <AnimatePresence>
-          {us.error && (
-            <motion.div
-              initial={{ opacity: 0, y: -4 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
-              className="flex items-start gap-2 p-3 rounded-xl"
-              style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)' }}
-            >
-              <AlertCircle size={13} color="#ef4444" className="flex-shrink-0 mt-0.5" />
-              <div className="flex-1 min-w-0">
-                <p className="text-[11px] font-bold" style={{ color: '#ef4444' }}>Error al subir</p>
-                <p className="text-[10px]" style={{ color: '#ef4444' }}>{us.error}</p>
-              </div>
-              <button onClick={() => clearError(slot)}>
-                <X size={12} color="#ef4444" />
-              </button>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
         {/* Change button (shows when preview exists) */}
-        {preview && !us.uploading && (
+        {preview && (
           <button
             onClick={() => openPicker(slot)}
             className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-black transition-all hover:scale-[1.02]"
@@ -431,7 +378,7 @@ export default function ConfiguracionView({ theme: t, onPaletteChange, currentPa
                     <ImageCard
                       slot="profileImage"
                       label="Foto de perfil"
-                      hint={`JPG / PNG · Máx ${MAX_MB} MB · Se recortará en círculo`}
+                      hint={`JPG / PNG · Máx 5 MB · Se recortará en círculo`}
                       aspect={1}
                       isCircular
                     />
@@ -466,7 +413,7 @@ export default function ConfiguracionView({ theme: t, onPaletteChange, currentPa
                 <ImageCard
                   slot="coverImage"
                   label="Cambiar portada"
-                  hint={`JPG / PNG · Máx ${MAX_MB} MB · Formato 16:9 banner`}
+                  hint={`JPG / PNG · Máx 5 MB · Formato 16:9 banner`}
                   aspect={16 / 9}
                   isCircular={false}
                 />

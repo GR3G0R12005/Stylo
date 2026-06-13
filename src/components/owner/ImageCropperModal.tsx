@@ -38,11 +38,17 @@ export default function ImageCropperModal({ open, imageSrc, aspect, slot, theme:
 
   const onImageLoad = useCallback((e: React.SyntheticEvent<HTMLImageElement>) => {
     const { naturalWidth: width, naturalHeight: height } = e.currentTarget;
-    setCrop(centerAspectCrop(width, height, aspect));
+    const initialCrop = centerAspectCrop(width, height, aspect);
+    setCrop(initialCrop);
+    // Initialize completedCrop so the confirm button is enabled immediately
+    // even if the user doesn't drag the crop area manually.
+    setCompletedCrop(initialCrop);
   }, [aspect]);
 
   const handleConfirm = useCallback(() => {
-    if (!imgRef.current || !completedCrop) return;
+    // Use completedCrop if available, fall back to crop (initial centered crop)
+    const activeCrop = completedCrop ?? crop;
+    if (!imgRef.current || !activeCrop) return;
 
     const image = imgRef.current;
     const canvas = document.createElement('canvas');
@@ -61,10 +67,10 @@ export default function ImageCropperModal({ open, imageSrc, aspect, slot, theme:
 
     ctx.drawImage(
       image,
-      completedCrop.x * scaleX,
-      completedCrop.y * scaleY,
-      completedCrop.width * scaleX,
-      completedCrop.height * scaleY,
+      activeCrop.x * scaleX,
+      activeCrop.y * scaleY,
+      activeCrop.width * scaleX,
+      activeCrop.height * scaleY,
       0,
       0,
       outputW,
@@ -72,8 +78,8 @@ export default function ImageCropperModal({ open, imageSrc, aspect, slot, theme:
     );
 
     const dataUrl = canvas.toDataURL('image/jpeg', 0.88);
-    onConfirm(dataUrl, completedCrop);
-  }, [completedCrop, slot, onConfirm]);
+    onConfirm(dataUrl, activeCrop);
+  }, [completedCrop, crop, slot, onConfirm]);
 
   const isProfile = slot === 'profileImage';
 
@@ -182,7 +188,7 @@ export default function ImageCropperModal({ open, imageSrc, aspect, slot, theme:
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.97 }}
                 onClick={handleConfirm}
-                disabled={!completedCrop?.width}
+                disabled={!(completedCrop?.width || crop?.width)}
                 className="flex-[2] py-3 rounded-xl font-black text-sm flex items-center justify-center gap-2 disabled:opacity-40"
                 style={{ background: t.accent, color: '#fff' }}
               >
