@@ -37,7 +37,7 @@ export default function ClienteLayout({
     >
       {/* ── Sticky Header — Structural Glassmorphism ──────────────────── */}
       <header className="sticky top-0 z-40 glass-structural">
-        <motion.div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-[4.5rem] flex items-center justify-between gap-3">
+        <motion.div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 h-14 sm:h-16 md:h-[4.5rem] flex items-center justify-between gap-2 sm:gap-3">
           <div className="flex items-center gap-2 sm:gap-4 min-w-0">
             <button
               type="button"
@@ -48,11 +48,11 @@ export default function ClienteLayout({
               <Menu className="w-5 h-5" />
             </button>
             <Link to="/cliente" onClick={onResetHome} className="flex items-center gap-2 sm:gap-3 min-w-0">
-              <span className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl inline-flex items-center justify-center text-white bg-theme-primary shadow-lg shadow-theme-primary/20 shrink-0">
-                <Star className="w-4 h-4 sm:w-5 sm:h-5 fill-current" />
+              <span className="w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10 rounded-xl inline-flex items-center justify-center text-white bg-theme-primary shadow-lg shadow-theme-primary/20 shrink-0">
+                <Star className="w-3.5 h-3.5 sm:w-4 sm:h-4 md:w-5 md:h-5 fill-current" />
               </span>
               <div className="text-left min-w-0 hidden sm:block">
-                <p className="text-sm font-black tracking-tight truncate">STEYLOOK</p>
+                <p className="text-xs sm:text-sm font-black tracking-tight truncate">STEYLOOK</p>
                 <p className="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-theme-secondary truncate">
                   {themeBadge}
                 </p>
@@ -88,18 +88,18 @@ export default function ClienteLayout({
             </Link>
           </nav>
 
-          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+          <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3 shrink-0">
             <button
               type="button"
               onClick={onToggleDark}
               className="p-2 sm:p-2.5 rounded-xl bg-theme-secondary/10 text-theme-secondary hover:bg-theme-secondary/20 transition-all"
               aria-label="Cambiar tema"
             >
-              {isDarkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+              {isDarkMode ? <Sun className="w-4 h-4 sm:w-5 sm:h-5" /> : <Moon className="w-4 h-4 sm:w-5 sm:h-5" />}
             </button>
-            <div className="hidden md:block text-right max-w-[140px]">
-              <p className="text-sm font-bold leading-tight truncate">{profile?.nombre}</p>
-              <p className="text-[10px] text-theme-secondary font-medium truncate">{profile?.email}</p>
+            <div className="hidden md:block text-right max-w-[120px] lg:max-w-[140px]">
+              <p className="text-xs sm:text-sm font-bold leading-tight truncate">{profile?.nombre}</p>
+              <p className="text-[9px] sm:text-[10px] text-theme-secondary font-medium truncate">{profile?.email}</p>
             </div>
             <button
               type="button"
@@ -107,7 +107,7 @@ export default function ClienteLayout({
               className="p-2 sm:p-2.5 rounded-xl bg-theme-secondary/10 text-theme-secondary hover:bg-red-500/10 hover:text-red-500 transition-all"
               aria-label="Cerrar sesión"
             >
-              <LogOut className="w-5 h-5" />
+              <LogOut className="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
           </div>
         </motion.div>
@@ -128,7 +128,7 @@ export default function ClienteLayout({
               animate={{ x: 0 }}
               exit={{ x: '-100%' }}
               transition={{ type: 'spring', damping: 28, stiffness: 280 }}
-              className="fixed left-0 top-0 bottom-0 z-[51] w-[min(85vw,320px)] backdrop-blur-2xl bg-white/90 dark:bg-zinc-900/90 border-r border-zinc-200/50 dark:border-zinc-800/50 p-6 flex flex-col lg:hidden"
+              className="fixed left-0 top-0 bottom-0 z-[51] w-[min(80vw,300px)] sm:w-[min(85vw,320px)] backdrop-blur-2xl bg-white/90 dark:bg-zinc-900/90 border-r border-zinc-200/50 dark:border-zinc-800/50 p-4 sm:p-6 flex flex-col lg:hidden"
             >
               <div className="flex items-center justify-between mb-8">
                 <p className="font-black text-lg">Menú</p>
@@ -177,10 +177,10 @@ export default function ClienteLayout({
         )}
       </AnimatePresence>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10">{children}</main>
+      <main className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-10">{children}</main>
 
       {/* ── Bottom Tab Bar — Structural Glassmorphism ─────────────────── */}
-      <nav className="fixed bottom-0 inset-x-0 z-40 lg:hidden backdrop-blur-2xl bg-white/80 dark:bg-zinc-900/85 border-t border-zinc-200/50 dark:border-zinc-800/50 px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+      <nav className="fixed bottom-0 inset-x-0 z-40 lg:hidden backdrop-blur-2xl bg-white/80 dark:bg-zinc-900/85 border-t border-zinc-200/50 dark:border-zinc-800/50 px-3 sm:px-4 py-2.5 sm:py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
         <div className="flex justify-between items-center max-w-md mx-auto">
           {[
             { id: 'home' as const, icon: Star, label: 'Explorar' },
@@ -194,21 +194,21 @@ export default function ClienteLayout({
                 if (item.id === 'home') onResetHome();
               }}
               className={cn(
-                'flex flex-col items-center gap-1 px-3 py-1 rounded-2xl transition-all min-w-[4rem]',
+                'flex flex-col items-center gap-1 px-2 sm:px-3 py-1 rounded-2xl transition-all min-w-[3.5rem] sm:min-w-[4rem]',
                 activeTab === item.id ? 'text-theme-primary scale-105' : 'text-zinc-400',
               )}
             >
-              <item.icon className={cn('w-6 h-6', activeTab === item.id && 'fill-current')} />
-              <span className="text-[9px] font-black uppercase tracking-wider">{item.label}</span>
+              <item.icon className={cn('w-5 h-5 sm:w-6 sm:h-6', activeTab === item.id && 'fill-current')} />
+              <span className="text-[8px] sm:text-[9px] font-black uppercase tracking-wider">{item.label}</span>
             </button>
           ))}
-          <button type="button" onClick={onToggleDark} className="flex flex-col items-center gap-1 px-3 py-1 text-zinc-400 min-w-[4rem]">
-            {isDarkMode ? <Sun className="w-6 h-6" /> : <Moon className="w-6 h-6" />}
-            <span className="text-[9px] font-black uppercase tracking-wider">Tema</span>
+          <button type="button" onClick={onToggleDark} className="flex flex-col items-center gap-1 px-2 sm:px-3 py-1 text-zinc-400 min-w-[3.5rem] sm:min-w-[4rem]">
+            {isDarkMode ? <Sun className="w-5 h-5 sm:w-6 sm:h-6" /> : <Moon className="w-5 h-5 sm:w-6 sm:h-6" />}
+            <span className="text-[8px] sm:text-[9px] font-black uppercase tracking-wider">Tema</span>
           </button>
-          <button type="button" onClick={signOut} className="flex flex-col items-center gap-1 px-3 py-1 text-zinc-400 min-w-[4rem]">
-            <User className="w-6 h-6" />
-            <span className="text-[9px] font-black uppercase tracking-wider">Salir</span>
+          <button type="button" onClick={signOut} className="flex flex-col items-center gap-1 px-2 sm:px-3 py-1 text-zinc-400 min-w-[3.5rem] sm:min-w-[4rem]">
+            <User className="w-5 h-5 sm:w-6 sm:h-6" />
+            <span className="text-[8px] sm:text-[9px] font-black uppercase tracking-wider">Salir</span>
           </button>
         </div>
       </nav>
