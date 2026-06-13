@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAuth } from '../../context/AuthContext';
 import { db, handleFirestoreError, OperationType, auth } from '../../lib/firebase';
@@ -157,34 +158,22 @@ export default function ClienteHome() {
     }
   }, [profile?.nombre]);
 
-  // Lock body scroll when modals are open — iOS-compatible via position:fixed trick
+  // Lock body scroll when modals are open
+  // NOTE: We set overflow on BOTH html and body — works on iOS/Android without
+  // breaking fixed-position children (position:fixed on body would break modal overlay)
   useEffect(() => {
     const shouldLock = !!selectedShop || !!selectedApptDetails || !!showReviewForm;
+    const html = document.documentElement;
     if (shouldLock) {
-      const scrollY = window.scrollY;
-      document.body.style.position = 'fixed';
-      document.body.style.top = `-${scrollY}px`;
-      document.body.style.width = '100%';
+      html.style.overflow = 'hidden';
       document.body.style.overflow = 'hidden';
     } else {
-      const scrollY = document.body.style.top;
-      document.body.style.position = '';
-      document.body.style.top = '';
-      document.body.style.width = '';
+      html.style.overflow = '';
       document.body.style.overflow = '';
-      if (scrollY) {
-        window.scrollTo(0, parseInt(scrollY || '0', 10) * -1);
-      }
     }
     return () => {
-      const scrollY = document.body.style.top;
-      document.body.style.position = '';
-      document.body.style.top = '';
-      document.body.style.width = '';
+      html.style.overflow = '';
       document.body.style.overflow = '';
-      if (scrollY) {
-        window.scrollTo(0, parseInt(scrollY || '0', 10) * -1);
-      }
     };
   }, [selectedShop, selectedApptDetails, showReviewForm]);
 
@@ -737,21 +726,25 @@ export default function ClienteHome() {
 
       {/* Booking Modal */}
       <AnimatePresence>
-        {selectedShop && (
+        {selectedShop && createPortal(
           <motion.div
+            key="booking-modal-overlay"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-zinc-950/40 backdrop-blur-md flex items-center justify-center p-4 sm:p-6"
-            onClick={(e) => { if (e.target === e.currentTarget) { setSelectedShop(null); setSelectedServices([]); setIsSelectingTime(false); setBookingDate(null); setBookingTime(''); }}}
-            onTouchMove={(e) => { if (e.target === e.currentTarget) e.preventDefault(); }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6"
           >
+            <div
+              style={{ touchAction: 'none' }}
+              className="absolute inset-0 bg-zinc-950/40 backdrop-blur-md"
+              onClick={() => { setSelectedShop(null); setSelectedServices([]); setIsSelectingTime(false); setBookingDate(null); setBookingTime(''); }}
+            />
             <motion.div
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
               transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-              className="bg-theme-bg w-full max-w-2xl rounded-[2rem] sm:rounded-[2.5rem] max-h-[90vh] shadow-2xl relative text-theme-text flex flex-col"
+              className="bg-theme-bg w-full max-w-2xl rounded-[2rem] sm:rounded-[2.5rem] max-h-[90vh] shadow-2xl relative text-theme-text flex flex-col z-10"
             >
               {/* Fixed Header */}
               <div className="p-4 sm:p-5 md:p-6 pb-3 sm:pb-4 shrink-0 border-b border-theme-secondary/10">
@@ -1002,19 +995,31 @@ export default function ClienteHome() {
                 )}
               </AnimatePresence>
             </motion.div>
-          </motion.div>
+          </motion.div>,
+          document.body
         )}
       </AnimatePresence>
 
       {/* Review Modal */}
       <AnimatePresence>
-        {showReviewForm && (
-          <div className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-md flex items-center justify-center p-6">
+        {showReviewForm && createPortal(
+          <motion.div
+            key="review-modal-overlay"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[60] flex items-center justify-center p-6"
+          >
+            <div
+              style={{ touchAction: 'none' }}
+              className="absolute inset-0 bg-black/60 backdrop-blur-md"
+              onClick={() => setShowReviewForm(null)}
+            />
             <motion.div
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="w-full max-w-lg relative"
+              className="w-full max-w-lg relative z-10"
             >
               <button 
                 onClick={() => setShowReviewForm(null)}
@@ -1033,25 +1038,32 @@ export default function ClienteHome() {
                 }}
               />
             </motion.div>
-          </div>
+          </motion.div>,
+          document.body
         )}
       </AnimatePresence>
 
       {/* Appointment Details Modal */}
       <AnimatePresence>
-        {selectedApptDetails && (
-          <div
-            className="fixed inset-0 z-50 bg-zinc-950/40 backdrop-blur-md flex items-center justify-center p-4 sm:p-6"
-            onClick={(e) => {
-              if (e.target === e.currentTarget) setSelectedApptDetails(null);
-            }}
+        {selectedApptDetails && createPortal(
+          <motion.div
+            key="appt-details-overlay"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6"
           >
+            <div
+              style={{ touchAction: 'none' }}
+              className="absolute inset-0 bg-zinc-950/40 backdrop-blur-md"
+              onClick={() => setSelectedApptDetails(null)}
+            />
             <motion.div
               initial={{ scale: 0.9, opacity: 0, y: 20 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.9, opacity: 0, y: 20 }}
               transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-              className="bg-white dark:bg-zinc-900 border border-theme-secondary/10 w-full max-w-md rounded-[2.5rem] shadow-2xl overflow-hidden relative text-theme-text flex flex-col p-6 sm:p-8"
+              className="bg-white dark:bg-zinc-900 border border-theme-secondary/10 w-full max-w-md rounded-[2.5rem] shadow-2xl overflow-hidden relative text-theme-text flex flex-col p-6 sm:p-8 z-10"
             >
               {/* Close Button */}
               <button
@@ -1153,7 +1165,8 @@ export default function ClienteHome() {
                 </button>
               </div>
             </motion.div>
-          </div>
+          </motion.div>,
+          document.body
         )}
       </AnimatePresence>
 
@@ -1181,13 +1194,14 @@ export default function ClienteHome() {
 
       {/* Chat Window */}
       <AnimatePresence>
-        {activeChat && auth.currentUser && (
+        {activeChat && auth.currentUser && createPortal(
           <ChatWindow 
             chatId={activeChat.id}
             recipientName={activeChat.name}
             currentUserId={auth.currentUser.uid}
             onClose={() => setActiveChat(null)}
-          />
+          />,
+          document.body
         )}
       </AnimatePresence>
 
