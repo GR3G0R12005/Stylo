@@ -157,19 +157,43 @@ export default function ClienteHome() {
     }
   }, [profile?.nombre]);
 
-  const filteredShops = shops.filter((shop) => {
+  const filteredShops = (() => {
     const q = searchQuery.toLowerCase().trim();
-    const matchSearch =
-      !q ||
-      shop.name.toLowerCase().includes(q) ||
-      (shop.address && shop.address.toLowerCase().includes(q)) ||
-      (shop.categories && shop.categories.some((c) => c.toLowerCase().includes(q)));
-    const matchCategory = filters.category === 'Todos' || (shop.categories && shop.categories.includes(filters.category));
-    const matchRating = (shop.rating ?? 5.0) >= filters.minRating;
-    const matchPrice = (shop.priceRange ?? 2) <= filters.maxPrice;
-    const matchType = shop.type === activeInterface;
-    return matchSearch && matchCategory && matchRating && matchPrice && matchType;
-  });
+
+    // First pass: shops of the active type that match all filters
+    const ofActiveType = shops.filter((shop) => {
+      const cats = shop.categories ?? [];
+      const matchSearch =
+        !q ||
+        shop.name.toLowerCase().includes(q) ||
+        (shop.address && shop.address.toLowerCase().includes(q)) ||
+        cats.some((c) => c.toLowerCase().includes(q));
+      const matchCategory = filters.category === 'Todos' || cats.includes(filters.category);
+      const matchRating = (shop.rating ?? 0) >= filters.minRating;
+      const matchPrice = (shop.priceRange ?? 2) <= filters.maxPrice;
+      const matchType = shop.type === activeInterface;
+      return matchSearch && matchCategory && matchRating && matchPrice && matchType;
+    });
+
+    // If there are shops of the active type, show only those
+    if (ofActiveType.length > 0) return ofActiveType;
+
+    // Fallback: show ALL public shops (regardless of type) when none match the
+    // active interface — prevents a salon from being invisible to a client whose
+    // default mode is 'barberia'
+    return shops.filter((shop) => {
+      const cats = shop.categories ?? [];
+      const matchSearch =
+        !q ||
+        shop.name.toLowerCase().includes(q) ||
+        (shop.address && shop.address.toLowerCase().includes(q)) ||
+        cats.some((c) => c.toLowerCase().includes(q));
+      const matchCategory = filters.category === 'Todos' || cats.includes(filters.category);
+      const matchRating = (shop.rating ?? 0) >= filters.minRating;
+      const matchPrice = (shop.priceRange ?? 2) <= filters.maxPrice;
+      return matchSearch && matchCategory && matchRating && matchPrice;
+    });
+  })();
 
   const loadLocalAppointments = (): Appointment[] => {
     try {
@@ -672,7 +696,7 @@ export default function ClienteHome() {
                         <div className="text-[10px] font-black uppercase tracking-[0.2em] px-3 py-1 bg-zinc-100 rounded-full text-zinc-500">
                           {shop.type === 'barberia' ? 'Barberería' : 'Salón'}
                         </div>
-                        {shop.categories.slice(0, 2).map(cat => (
+                        {(shop.categories ?? []).slice(0, 2).map(cat => (
                           <div key={cat} className="text-[10px] font-black uppercase tracking-[0.2em] px-3 py-1 bg-theme-primary/10 rounded-full text-theme-primary">
                             {cat}
                           </div>
