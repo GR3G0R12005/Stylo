@@ -21,7 +21,7 @@ function ProtectedRoute({ children, allowedRoles }: { children: React.ReactNode,
   if (loading || (user && !profile)) return (
     <div className="h-screen w-screen flex items-center justify-center bg-black text-white">
       <div className="animate-pulse text-2xl font-light tracking-widest text-center">
-        STEYLOOK<br />
+        STAYLOOK<br />
         <span className="text-[10px] tracking-[0.5em] text-theme-secondary font-bold uppercase transition-all duration-1000">Cargando Experiencia</span>
       </div>
     </div>

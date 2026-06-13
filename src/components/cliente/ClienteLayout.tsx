@@ -47,7 +47,7 @@ export default function ClienteLayout({
                 <Star className="w-3.5 h-3.5 sm:w-4 sm:h-4 md:w-5 md:h-5 fill-current" />
               </span>
               <div className="text-left min-w-0 hidden sm:block">
-                <p className="text-xs sm:text-sm font-black tracking-tight truncate">STEYLOOK</p>
+                <p className="text-xs sm:text-sm font-black tracking-tight truncate">STAYLOOK</p>
                 <p className="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-theme-secondary truncate">
                   {themeBadge}
                 </p>

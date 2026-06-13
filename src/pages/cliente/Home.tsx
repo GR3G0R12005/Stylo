@@ -285,7 +285,7 @@ export default function ClienteHome() {
                 <Bell className="w-5 h-5 text-white" />
               </div>
               <div className="flex-1">
-                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-theme-secondary mb-1">Steylook AI Assistant</p>
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-theme-secondary mb-1">Staylook AI Assistant</p>
                 <p className="text-sm font-medium leading-relaxed">{notification}</p>
               </div>
               <button onClick={() => setNotification(null)} className="text-zinc-500 hover:text-white transition-colors">

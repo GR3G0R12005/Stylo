@@ -18,8 +18,8 @@ export default defineConfig(({ mode }) => {
           enabled: false,
         },
         manifest: {
-          name: 'STEYLOOK — Tu Estilo, Tu Mundo',
-          short_name: 'STEYLOOK',
+          name: 'STAYLOOK — Tu Estilo, Tu Mundo',
+          short_name: 'STAYLOOK',
           description: 'Reserva tu cita de barbería o salón fácil y rápido. Experiencia premium para clientes, barberos y saloneras.',
           start_url: '/',
           scope: '/',

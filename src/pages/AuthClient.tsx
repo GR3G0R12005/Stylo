@@ -104,7 +104,7 @@ export default function AuthClient() {
 
         <div className="bg-white/5 backdrop-blur-3xl border border-white/10 rounded-[2rem] sm:rounded-[2.5rem] p-6 sm:p-10">
           <motion.div className="mb-8 sm:mb-10">
-            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-blue-400 mb-2">STEYLOOK</p>
+            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-blue-400 mb-2">STAYLOOK</p>
             <h2 className="text-2xl sm:text-3xl font-bold tracking-tighter mb-2">
               {isLogin ? 'Bienvenido de nuevo' : 'Crea tu cuenta'}
             </h2>

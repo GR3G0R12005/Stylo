@@ -58,7 +58,7 @@ export default function Landing() {
                 <Scissors className="w-5 h-5" />
               </div>
               <span className="text-2xl font-black tracking-[0.2em] uppercase">
-                STEY<span className="text-barber-gold">LOOK</span>
+                STAY<span className="text-barber-gold">LOOK</span>
               </span>
             </div>
 
@@ -201,7 +201,7 @@ export default function Landing() {
         <section className="py-16 sm:py-20 px-4 sm:px-6 bg-white/5 border-y border-white/10">
           <div className="max-w-7xl mx-auto text-center">
             <h2 className="text-2xl sm:text-3xl md:text-4xl font-black uppercase tracking-tight mb-12 sm:mb-16">
-              ¿Por qué usar Steylook?
+              ¿Por qué usar Staylook?
             </h2>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 sm:gap-12">
@@ -257,7 +257,7 @@ export default function Landing() {
                 Impulsa tu <br /> Barbería o Salón
               </h2>
               <p className="text-base sm:text-lg text-zinc-400 mb-6 sm:mb-8 font-medium max-w-md mx-auto md:mx-0">
-                Únete a Steylook y obtén un sistema de reservas automático,
+                Únete a Staylook y obtén un sistema de reservas automático,
                 métricas de ingresos en tiempo real y exposición a miles de
                 nuevos clientes buscando un corte en tu área.
               </p>
@@ -312,10 +312,10 @@ export default function Landing() {
         {/* Footer */}
         <footer className="py-8 sm:py-12 text-center text-zinc-500 text-[10px] font-black uppercase tracking-widest border-t border-white/5 mt-10 px-4">
           <div className="flex justify-center items-center gap-3 mb-4 sm:mb-6">
-            <Scissors className="w-4 h-4 sm:w-5 sm:h-5 text-zinc-400" /> STEYLOOK
+            <Scissors className="w-4 h-4 sm:w-5 sm:h-5 text-zinc-400" /> STAYLOOK
           </div>
           <p className="px-4">
-            © {new Date().getFullYear()} Steylook Global Group. Todos los
+            © {new Date().getFullYear()} Staylook Global Group. Todos los
             derechos reservados.
           </p>
         </footer>
@@ -415,7 +415,7 @@ function RoleBottomSheet({
 
               <div className="text-center mb-6 sm:mb-8">
                 <h3 className="text-xl sm:text-2xl font-black uppercase tracking-tight mb-2 text-white">
-                  Comenzar en Steylook
+                  Comenzar en Staylook
                 </h3>
                 <p className="text-zinc-400 text-xs sm:text-sm font-medium">
                   Elige cómo quieres continuar

@@ -17,13 +17,13 @@ export async function generateReminderMessage(clientName: string, shopName: stri
     if (!ai) throw new Error("AI no configurada");
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
-      contents: `Eres un asistente virtual de una aplicación de reservas premium llamada STEYLOOK. 
+      contents: `Eres un asistente virtual de una aplicación de reservas premium llamada STAYLOOK. 
       Escribe un mensaje de notificación corto y elegante para el cliente ${clientName}.
       Se le recordará su cita para el servicio de "${serviceName}" en "${shopName}".
       La cita es en "${timeUntil}".
       El tono debe ser profesional, cercano y motivador. Máximo 25 palabras.`,
     });
-    return response.text?.trim() || `Hola ${clientName}, STEYLOOK te recuerda tu cita hoy en ${shopName} para ${serviceName}. ¡Te esperamos!`;
+    return response.text?.trim() || `Hola ${clientName}, STAYLOOK te recuerda tu cita hoy en ${shopName} para ${serviceName}. ¡Te esperamos!`;
   } catch (error) {
     console.error("Error generating reminder:", error);
     return `Hola ${clientName}, recordatorio de tu cita en ${shopName} para ${serviceName}.`;
@@ -35,7 +35,7 @@ export async function generateWelcomeMessage(clientName: string) {
       if (!ai) throw new Error("AI no configurada");
       const response = await ai.models.generateContent({
         model: "gemini-3-flash-preview",
-        contents: `Escribe un mensaje de bienvenida corto (máximo 15 palabras) para ${clientName} que acaba de entrar a la app Steylook. 
+        contents: `Escribe un mensaje de bienvenida corto (máximo 15 palabras) para ${clientName} que acaba de entrar a la app Staylook. 
         Menciona que encontrará los mejores barberos y salones.`,
       });
       return response.text?.trim() || `¡Bienvenido a StyleBook, ${clientName}! Encuentra tu mejor estilo hoy.`;

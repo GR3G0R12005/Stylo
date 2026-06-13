@@ -11,13 +11,13 @@ registerSW({
     // The VitePWA autoUpdate strategy handles the refresh automatically
   },
   onOfflineReady() {
-    console.log('[STEYLOOK PWA] App lista para uso sin conexion.');
+    console.log('[STAYLOOK PWA] App lista para uso sin conexion.');
   },
   onRegistered(registration) {
-    console.log('[STEYLOOK PWA] Service Worker registrado:', registration);
+    console.log('[STAYLOOK PWA] Service Worker registrado:', registration);
   },
   onRegisterError(error) {
-    console.warn('[STEYLOOK PWA] Error al registrar Service Worker:', error);
+    console.warn('[STAYLOOK PWA] Error al registrar Service Worker:', error);
   },
 });
 

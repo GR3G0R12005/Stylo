@@ -109,7 +109,7 @@ export default function OwnerLayout({ role }: Props) {
             : <Sparkles size={16} sm:size={20} color="#fff" fill="currentColor" />}
         </div>
         <div className="text-left leading-none">
-          <p className="font-black text-base sm:text-lg" style={{ color: t.text }}>STEYLOOK</p>
+          <p className="font-black text-base sm:text-lg" style={{ color: t.text }}>STAYLOOK</p>
           <p className="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest" style={{ color: t.accent }}>
             {role === 'barbero' ? 'Barber Pro' : 'Studio Pro'}
           </p>

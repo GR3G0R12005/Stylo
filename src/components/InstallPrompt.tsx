@@ -1,6 +1,6 @@
 /**
  * InstallPrompt.tsx
- * Smart PWA install banner for STEYLOOK.
+ * Smart PWA install banner for STAYLOOK.
  * - Android/Chrome: uses the native `beforeinstallprompt` event.
  * - iOS/Safari: detects standalone mode and shows manual instructions.
  * - Remembers dismissals via localStorage.
@@ -104,14 +104,14 @@ export default function InstallPrompt() {
             {/* Icon */}
             <img
               src="/icons/icon-192.png"
-              alt="STEYLOOK"
+              alt="STAYLOOK"
               style={{ width: 48, height: 48, borderRadius: '0.5rem', flexShrink: 0 }}
             />
 
             {/* Text */}
             <div style={{ flex: 1 }}>
               <p style={{ color: '#D4AF37', fontWeight: 700, fontSize: '0.9rem', margin: 0 }}>
-                Instalar STEYLOOK
+                Instalar STAYLOOK
               </p>
               <p style={{ color: '#a1a1aa', fontSize: '0.75rem', margin: '2px 0 0' }}>
                 Añade la app a tu pantalla de inicio
@@ -179,12 +179,12 @@ export default function InstallPrompt() {
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem' }}>
               <img
                 src="/icons/icon-192.png"
-                alt="STEYLOOK"
+                alt="STAYLOOK"
                 style={{ width: 40, height: 40, borderRadius: '0.5rem' }}
               />
               <div>
                 <p style={{ color: '#D4AF37', fontWeight: 700, fontSize: '0.9rem', margin: 0 }}>
-                  Instalar STEYLOOK
+                  Instalar STAYLOOK
                 </p>
                 <p style={{ color: '#a1a1aa', fontSize: '0.75rem', margin: '2px 0 0' }}>
                   En tu pantalla de inicio

@@ -560,7 +560,7 @@ export default function ConfiguracionView({ theme: t, onPaletteChange, currentPa
                   </div>
                 </div>
                 <p style={muted} className="text-[11px] mt-3 leading-relaxed">
-                  Activa esta opción cuando tu negocio esté listo: nombre, dirección, al menos un servicio y tus horarios completos. Los clientes solo verán negocios públicos en el directorio de Steylook.
+                  Activa esta opción cuando tu negocio esté listo: nombre, dirección, al menos un servicio y tus horarios completos. Los clientes solo verán negocios públicos en el directorio de Staylook.
                 </p>
               </div>
 

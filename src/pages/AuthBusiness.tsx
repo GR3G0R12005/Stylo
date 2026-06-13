@@ -158,7 +158,7 @@ export default function AuthBusiness() {
             <div className={`w-12 h-12 rounded-2xl flex items-center justify-center mb-4 bg-${colorClass}-500`}>
               <Icon className="w-6 h-6" color={businessType === 'barbero' ? '#000' : '#fff'} />
             </div>
-            <p className={`text-[10px] font-black uppercase tracking-[0.3em] text-${colorClass}-400 mb-2`}>STEYLOOK BUSINESS</p>
+            <p className={`text-[10px] font-black uppercase tracking-[0.3em] text-${colorClass}-400 mb-2`}>STAYLOOK BUSINESS</p>
             <h2 className="text-2xl sm:text-3xl font-bold tracking-tighter mb-2">
               {isLogin ? 'Bienvenido' : 'Crear Cuenta de Negocio'}
             </h2>
