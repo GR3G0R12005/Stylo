@@ -1,4 +1,15 @@
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from './firebase';
+
 export type UserRole = 'cliente' | 'barbero' | 'salonera';
+
+export async function fetchUserRole(uid: string): Promise<UserRole | null> {
+  const userDoc = await getDoc(doc(db, 'users', uid));
+  if (!userDoc.exists()) return null;
+  const tipo = userDoc.data().tipo;
+  if (tipo === 'barbero' || tipo === 'salonera' || tipo === 'cliente') return tipo;
+  return null;
+}
 
 export function getRolePath(role: UserRole | string): string {
   if (role === 'barbero') return '/barbero';
