@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAuth } from '../../context/AuthContext';
 import { db, handleFirestoreError, OperationType, auth } from '../../lib/firebase';
-import { collection, getDocs, query, addDoc, serverTimestamp, where, orderBy, onSnapshot } from 'firebase/firestore';
+import { collection, query, addDoc, serverTimestamp, where, orderBy, onSnapshot } from 'firebase/firestore';
 import { Search, Calendar, Clock, MapPin, Star, User, LogOut, CheckCircle2, ChevronRight, X, ArrowLeft, MessageSquare, Bell, SlidersHorizontal, DollarSign, Moon, Sun, Phone, AlertCircle } from 'lucide-react';
 import { cn, formatCurrency } from '../../lib/utils';
 import { format } from 'date-fns';
@@ -51,6 +51,7 @@ export default function ClienteHome() {
   });
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState<'home' | 'appointments'>('home');
+  const [apptFilter, setApptFilter] = useState<'todas' | 'completadas'>('todas');
   const [timeTab, setTimeTab] = useState<'mañana' | 'tarde' | 'noche'>('mañana');
   const [activeInterface, setActiveInterface] = useState<'barberia' | 'salon'>(() => {
     return theme === 'feminine' ? 'salon' : 'barberia';
@@ -90,10 +91,63 @@ export default function ClienteHome() {
     return () => unsubscribe();
   }, []);
 
+  // Real-time appointments listener
   useEffect(() => {
-    fetchAppointments();
-    
-    // Welcome message simulation
+    const local = loadLocalAppointments();
+    setAppointments(local);
+
+    if (!auth.currentUser) return;
+
+    // Track previous statuses to detect changes
+    const prevStatuses = new Map<string, string>();
+
+    const q = query(
+      collection(db, 'appointments'),
+      where('clientId', '==', auth.currentUser.uid),
+      orderBy('createdAt', 'desc'),
+    );
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const data = snapshot.docs.map((d) => ({ id: d.id, ...d.data() } as Appointment));
+      if (data.length > 0) {
+        setAppointments(data);
+        saveLocalAppointments(data);
+
+        // Detect status changes made by the business
+        snapshot.docChanges().forEach((change) => {
+          if (change.type === 'modified') {
+            const appt = { id: change.doc.id, ...change.doc.data() } as Appointment;
+            const prev = prevStatuses.get(appt.id);
+            if (prev && prev !== appt.status) {
+              let msg = '';
+              if (appt.status === 'confirmed') msg = `✅ ¡Tu cita en ${appt.shopName} fue confirmada!`;
+              else if (appt.status === 'cancelled') msg = `❌ Tu cita en ${appt.shopName} fue cancelada.`;
+              else if (appt.status === 'completed') msg = `⭐ Tu cita en ${appt.shopName} fue completada. ¡Déjanos una valoración!`;
+              if (msg) {
+                setNotification(msg);
+                setTimeout(() => setNotification(null), 10000);
+              }
+            }
+          }
+          // Always update tracked statuses
+          const appt = { id: change.doc.id, ...change.doc.data() } as Appointment;
+          prevStatuses.set(appt.id, appt.status);
+        });
+
+        // Init tracker on first load
+        if (prevStatuses.size === 0) {
+          data.forEach((a) => prevStatuses.set(a.id, a.status));
+        }
+      }
+    }, (err) => {
+      console.error('Error listening appointments:', err);
+    });
+
+    return () => unsubscribe();
+  }, [auth.currentUser?.uid]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Welcome message on mount
+  useEffect(() => {
     if (profile?.nombre) {
       generateWelcomeMessage(profile.nombre).then(msg => {
         setNotification(msg);
@@ -129,38 +183,6 @@ export default function ClienteHome() {
     localStorage.setItem(APPT_STORAGE_KEY, JSON.stringify(list));
   };
 
-  const fetchAppointments = async () => {
-    const local = loadLocalAppointments();
-    if (!auth.currentUser) {
-      setAppointments(local);
-      return;
-    }
-    try {
-      const q = query(
-        collection(db, 'appointments'),
-        where('clientId', '==', auth.currentUser.uid),
-        orderBy('createdAt', 'desc'),
-      );
-      const snapshot = await getDocs(q);
-      const data = snapshot.docs.map((d) => ({ id: d.id, ...d.data() } as Appointment));
-      const merged = data.length > 0 ? data : local;
-      setAppointments(merged);
-      if (merged.some((a) => a.status === 'pending')) {
-        const pending = merged.find((a) => a.status === 'pending')!;
-        generateReminderMessage(profile?.nombre || 'Cliente', pending.shopName, pending.serviceName, '1 hora').then(
-          (msg) => {
-            setTimeout(() => {
-              setNotification(msg);
-              setTimeout(() => setNotification(null), 10000);
-            }, 3000);
-          },
-        );
-      }
-    } catch (err) {
-      console.error('Error fetching appointments:', err);
-      setAppointments(local);
-    }
-  };
 
   const handleSelectShop = async (shop: any) => {
     setSelectedShop(shop);
@@ -308,41 +330,90 @@ export default function ClienteHome() {
       </AnimatePresence>
 
       {activeTab === 'appointments' ? (
-        <section className="space-y-8">
+        <section className="space-y-6">
+          {/* Header */}
           <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
             <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-theme-text">Mis citas</h2>
-            <p className="text-zinc-500 font-medium mt-1">Próximas, pasadas y valoraciones</p>
+            <p className="text-zinc-500 font-medium mt-1">Gestiona tus reservas</p>
           </motion.div>
-          {appointments.length === 0 ? (
-            <div className="text-center py-16 sm:py-24 bg-theme-bg rounded-[2rem] sm:rounded-[3rem] border border-theme-secondary/10">
-              <Calendar className="w-12 h-12 text-theme-text/40 mx-auto mb-4" />
-              <p className="font-bold text-theme-text/70">Aún no tienes citas</p>
-              <p className="text-sm text-theme-text/50 mt-2 mb-6">Explora locales y reserva tu primera cita</p>
-              <button type="button" onClick={() => setActiveTab('home')} className="px-6 py-3 rounded-2xl bg-theme-primary text-white text-xs font-black uppercase tracking-widest">Explorar locales</button>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {appointments.map((app) => (
-                <motion.div key={app.id} layout className="p-5 sm:p-8 rounded-[1.75rem] sm:rounded-[2.5rem] bg-white dark:bg-zinc-900 border border-theme-secondary/10 shadow-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                  <div className="flex items-center gap-4 sm:gap-6 min-w-0">
-                    <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-zinc-50 dark:bg-zinc-800 flex items-center justify-center text-2xl sm:text-3xl shrink-0">{app.shopName.toLowerCase().includes('barber') ? '💈' : '✂️'}</div>
-                    <div className="min-w-0">
-                      <h4 className="font-black text-lg sm:text-xl text-zinc-900 dark:text-white truncate">{app.shopName}</h4>
-                      <p className="text-sm text-theme-secondary font-bold flex items-center gap-2 mt-1"><Calendar className="w-4 h-4 shrink-0" />{format(new Date(app.date), 'EEEE d MMMM', { locale: es })}</p>
-                      {app.serviceName && <p className="text-xs text-zinc-400 mt-1 truncate">{app.serviceName}</p>}
+
+          {/* Sub-tabs */}
+          <div className="flex gap-2 p-1.5 bg-theme-bg rounded-2xl border border-theme-secondary/10 w-fit">
+            {(['todas', 'completadas'] as const).map((tab) => (
+              <button
+                key={tab}
+                type="button"
+                onClick={() => setApptFilter(tab)}
+                className={cn(
+                  'px-5 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all',
+                  apptFilter === tab
+                    ? 'bg-theme-primary text-white shadow-md'
+                    : 'text-theme-text/50 hover:text-theme-text'
+                )}
+              >
+                {tab === 'todas' ? 'Todas' : 'Completadas'}
+              </button>
+            ))}
+          </div>
+
+          {/* List */}
+          {(() => {
+            const filteredAppts = apptFilter === 'completadas'
+              ? appointments.filter(a => a.status === 'completed')
+              : appointments
+                  .filter(a => a.status !== 'completed')
+                  .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+            if (appointments.length === 0) {
+              return (
+                <div className="text-center py-16 sm:py-24 bg-theme-bg rounded-[2rem] sm:rounded-[3rem] border border-theme-secondary/10">
+                  <Calendar className="w-12 h-12 text-theme-text/40 mx-auto mb-4" />
+                  <p className="font-bold text-theme-text/70">Aún no tienes citas</p>
+                  <p className="text-sm text-theme-text/50 mt-2 mb-6">Explora locales y reserva tu primera cita</p>
+                  <button type="button" onClick={() => setActiveTab('home')} className="px-6 py-3 rounded-2xl bg-theme-primary text-white text-xs font-black uppercase tracking-widest">Explorar locales</button>
+                </div>
+              );
+            }
+
+            if (filteredAppts.length === 0) {
+              return (
+                <div className="text-center py-14 bg-theme-bg rounded-[2rem] border border-theme-secondary/10">
+                  <Calendar className="w-10 h-10 text-theme-text/30 mx-auto mb-3" />
+                  <p className="font-bold text-theme-text/60 text-sm">
+                    {apptFilter === 'completadas' ? 'No tienes citas completadas aún' : 'No hay citas activas'}
+                  </p>
+                </div>
+              );
+            }
+
+            return (
+              <div className="space-y-4">
+                {filteredAppts.map((app) => (
+                  <motion.div key={app.id} layout initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="p-5 sm:p-8 rounded-[1.75rem] sm:rounded-[2.5rem] bg-white dark:bg-zinc-900 border border-theme-secondary/10 shadow-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div className="flex items-center gap-4 sm:gap-6 min-w-0">
+                      <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-zinc-50 dark:bg-zinc-800 flex items-center justify-center text-2xl sm:text-3xl shrink-0">{app.shopName.toLowerCase().includes('barber') ? '💈' : '✂️'}</div>
+                      <div className="min-w-0">
+                        <h4 className="font-black text-lg sm:text-xl text-zinc-900 dark:text-white truncate">{app.shopName}</h4>
+                        <p className="text-sm text-theme-secondary font-bold flex items-center gap-2 mt-1"><Calendar className="w-4 h-4 shrink-0" />{format(new Date(app.date), 'EEEE d MMMM', { locale: es })}</p>
+                        {app.serviceName && <p className="text-xs text-zinc-400 mt-1 truncate">{app.serviceName}</p>}
+                      </div>
                     </div>
-                  </div>
-                  <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-center gap-2 sm:text-right border-t sm:border-t-0 pt-3 sm:pt-0 border-theme-secondary/10">
-                    <div className="text-xl sm:text-2xl font-black text-theme-primary">{app.time || '10:00'}</div>
-                    <div className={cn('px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest', app.status === 'cancelled' ? 'bg-red-100 text-red-600' : app.status === 'completed' ? 'bg-green-100 text-green-700' : 'bg-theme-secondary/10 text-theme-secondary')}>
-                      {app.status === 'pending' ? 'Pendiente' : app.status === 'completed' ? 'Completada' : app.status === 'cancelled' ? 'Cancelada' : 'Confirmada'}
+                    <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-center gap-2 sm:text-right border-t sm:border-t-0 pt-3 sm:pt-0 border-theme-secondary/10">
+                      <div className="text-xl sm:text-2xl font-black text-theme-primary">{app.time || '10:00'}</div>
+                      <div className={cn('px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest',
+                        app.status === 'cancelled' ? 'bg-red-100 text-red-600' :
+                        app.status === 'completed' ? 'bg-green-100 text-green-700' :
+                        'bg-theme-secondary/10 text-theme-secondary'
+                      )}>
+                        {app.status === 'pending' ? 'Pendiente' : app.status === 'completed' ? 'Completada' : app.status === 'cancelled' ? 'Cancelada' : 'Confirmada'}
+                      </div>
+                      {app.status === 'completed' && <button type="button" onClick={() => setShowReviewForm(app.id)} className="text-[10px] font-black uppercase tracking-widest text-theme-primary">Valorar</button>}
                     </div>
-                    {app.status === 'completed' && <button type="button" onClick={() => setShowReviewForm(app.id)} className="text-[10px] font-black uppercase tracking-widest text-theme-primary">Valorar</button>}
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          )}
+                  </motion.div>
+                ))}
+              </div>
+            );
+          })()}
         </section>
       ) : (
         <>

@@ -21,7 +21,7 @@ import {
 } from '../data/ownerSeed';
 import { useToast } from '../components/owner/ui/Toast';
 import { auth, db } from '../lib/firebase';
-import { doc, setDoc, getDoc } from 'firebase/firestore';
+import { doc, setDoc, getDoc, collection, query, where, onSnapshot, updateDoc, orderBy } from 'firebase/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
 
 interface OwnerDataContextValue extends OwnerState {
@@ -149,14 +149,86 @@ export function OwnerDataProvider({
       }
     };
 
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
+    const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
       if (user) {
         fetchFirestoreShop();
       }
     });
 
-    return () => unsubscribe();
+    return () => unsubscribeAuth();
   }, []);
+
+  // Real-time Firestore listener for incoming client appointments
+  useEffect(() => {
+    let unsubscribeSnapshot: (() => void) | null = null;
+
+    const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
+      // Clean up previous listener if user changes
+      if (unsubscribeSnapshot) {
+        unsubscribeSnapshot();
+        unsubscribeSnapshot = null;
+      }
+      if (!user) return;
+
+      const shopId = user.uid;
+      const q = query(
+        collection(db, 'appointments'),
+        where('shopId', '==', shopId),
+        orderBy('createdAt', 'desc'),
+      );
+
+      // Track ids we already know about to detect NEW ones
+      let knownIds: Set<string> | null = null;
+
+      unsubscribeSnapshot = onSnapshot(q, (snapshot) => {
+        const firestoreAppts = snapshot.docs.map((d) => {
+          const data = d.data();
+          return {
+            id: d.id,
+            clientName: data.clientName || 'Cliente',
+            clientAvatar: (data.clientName || 'C').split(' ').map((w: string) => w[0]).join('').slice(0, 2).toUpperCase(),
+            service: data.serviceName || '',
+            serviceId: data.serviceId || '',
+            date: data.date ? new Date(data.date).toISOString().slice(0, 10) : '',
+            time: data.time || '10:00',
+            status: data.status || 'pending',
+            price: data.price || 0,
+            firestoreId: d.id,
+            clientId: data.clientId || '',
+          } as OwnerAppointment & { firestoreId: string; clientId: string };
+        });
+
+        // Notify about newly arrived bookings
+        if (knownIds !== null) {
+          snapshot.docChanges().forEach((change) => {
+            if (change.type === 'added') {
+              const data = change.doc.data();
+              if (!knownIds!.has(change.doc.id)) {
+                toast(`📅 Nueva cita de ${data.clientName || 'cliente'} — ${data.serviceName || ''}`, 'success');
+              }
+            }
+          });
+        }
+
+        knownIds = new Set(snapshot.docs.map((d) => d.id));
+
+        if (firestoreAppts.length > 0) {
+          setState((prev) => {
+            const firestoreIds = new Set(firestoreAppts.map((a) => a.id));
+            const localOnly = prev.appointments.filter((a) => !firestoreIds.has(a.id) && !a.id.startsWith('ap-'));
+            return { ...prev, appointments: [...firestoreAppts, ...localOnly] };
+          });
+        }
+      }, (err) => {
+        console.error('Error listening to Firestore appointments:', err);
+      });
+    });
+
+    return () => {
+      unsubscribeAuth();
+      if (unsubscribeSnapshot) unsubscribeSnapshot();
+    };
+  }, [toast]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     localStorage.setItem(storageKey, JSON.stringify(state));
@@ -195,6 +267,16 @@ export function OwnerDataProvider({
 
         return { ...prev, appointments, transactions };
       });
+
+      // Sync to Firestore so the client gets notified in real-time
+      (async () => {
+        try {
+          const apptRef = doc(db, 'appointments', id);
+          await updateDoc(apptRef, { status });
+        } catch (err) {
+          console.warn('Could not update appointment status in Firestore:', err);
+        }
+      })();
 
       const labels: Record<AppointmentStatus, string> = {
         pending: 'marcada como pendiente',

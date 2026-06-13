@@ -71,7 +71,9 @@ service cloud.firestore {
       }
 
       allow read: if isSignedIn() && (
-        isOwner(existing().clientId) || (existing().get('providerId', '') != '' && isOwner(existing().providerId))
+        isOwner(existing().clientId) || 
+        (existing().get('shopId', '') != '' && isOwner(existing().shopId)) ||
+        (existing().get('providerId', '') != '' && isOwner(existing().providerId))
       );
 
       allow create: if isSignedIn() && 
@@ -86,8 +88,8 @@ service cloud.firestore {
          incoming().status == 'cancelled' &&
          existing().status == 'pending') ||
         
-        // Provider can confirm or complete
-        (isOwner(existing().providerId) && 
+        // Provider / Shop owner can confirm, complete or cancel
+        ((isOwner(existing().get('shopId', '')) || isOwner(existing().get('providerId', ''))) && 
          incoming().diff(existing()).affectedKeys().hasOnly(['status']) &&
          incoming().status in ['confirmed', 'completed', 'cancelled'] &&
          existing().status != 'completed')
