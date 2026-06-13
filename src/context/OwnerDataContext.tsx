@@ -5,6 +5,7 @@ import {
   dateStr,
   getOwnerSeed,
   initials,
+  normalizeEmployee,
   type AppointmentStatus,
   type BlockedSlot,
   type OwnerAppointment,
@@ -29,6 +30,9 @@ interface OwnerDataContextValue extends OwnerState {
   addService: (service: Omit<OwnerService, 'id' | 'active'>) => void;
   updateService: (id: string, patch: Partial<OwnerService>) => void;
   toggleServiceActive: (id: string) => void;
+  addEmployee: (employee: Omit<OwnerEmployee, 'id' | 'avatar' | 'todayCitas' | 'rating' | 'since' | 'active'> & { name: string }) => void;
+  updateEmployee: (id: string, patch: Partial<OwnerEmployee>) => void;
+  toggleEmployeeActive: (id: string) => void;
   addPromo: (promo: Omit<OwnerPromo, 'id' | 'uses' | 'status'>) => void;
   deletePromo: (id: string) => void;
   replyReview: (id: string, reply: string) => void;
@@ -47,7 +51,13 @@ const OwnerDataContext = createContext<OwnerDataContextValue | null>(null);
 function loadState(key: string, role: OwnerRole): OwnerState {
   try {
     const raw = localStorage.getItem(key);
-    if (raw) return JSON.parse(raw) as OwnerState;
+    if (raw) {
+      const parsed = JSON.parse(raw) as OwnerState;
+      return {
+        ...parsed,
+        employees: (parsed.employees ?? []).map((e) => normalizeEmployee(e)),
+      };
+    }
   } catch {
     /* use seed */
   }
@@ -160,6 +170,46 @@ export function OwnerDataProvider({
     }));
   }, []);
 
+  const addEmployee = useCallback(
+    (employee: Omit<OwnerEmployee, 'id' | 'avatar' | 'todayCitas' | 'rating' | 'since' | 'active'> & { name: string }) => {
+      setState((prev) => ({
+        ...prev,
+        employees: [
+          ...prev.employees,
+          normalizeEmployee({
+            ...employee,
+            id: `emp-${Date.now()}`,
+            since: new Date().toISOString().slice(0, 7),
+          }),
+        ],
+      }));
+      toast('Empleado añadido al equipo');
+    },
+    [toast],
+  );
+
+  const updateEmployee = useCallback((id: string, patch: Partial<OwnerEmployee>) => {
+    setState((prev) => ({
+      ...prev,
+      employees: prev.employees.map((e) => {
+        if (e.id !== id) return e;
+        const next = { ...e, ...patch };
+        if (patch.name) next.avatar = initials(patch.name);
+        return next;
+      }),
+    }));
+    toast('Empleado actualizado');
+  }, [toast]);
+
+  const toggleEmployeeActive = useCallback((id: string) => {
+    setState((prev) => ({
+      ...prev,
+      employees: prev.employees.map((e) =>
+        e.id === id ? { ...e, active: !e.active } : e,
+      ),
+    }));
+  }, []);
+
   const addPromo = useCallback((promo: Omit<OwnerPromo, 'id' | 'uses' | 'status'>) => {
     const status = promoStatus(promo.expires);
     setState((prev) => ({
@@ -264,6 +314,9 @@ export function OwnerDataProvider({
       addService,
       updateService,
       toggleServiceActive,
+      addEmployee,
+      updateEmployee,
+      toggleEmployeeActive,
       addPromo,
       deletePromo,
       replyReview,
@@ -286,6 +339,9 @@ export function OwnerDataProvider({
       addService,
       updateService,
       toggleServiceActive,
+      addEmployee,
+      updateEmployee,
+      toggleEmployeeActive,
       addPromo,
       deletePromo,
       replyReview,
