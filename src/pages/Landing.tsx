@@ -12,31 +12,59 @@ import {
   Calendar,
   User,
   X,
+  Store,
 } from "lucide-react";
+import { collection, query, where, getDocs, limit } from "firebase/firestore";
+import { db } from "../lib/firebase";
 
-const FEATURED_SPOTS = [
-  {
-    name: "Stylo Original",
-    type: "Barbería",
-    rating: "4.9",
-    reviews: 128,
-    img: "https://images.unsplash.com/photo-1585747860715-2ba37e788b70?w=500&auto=format&fit=crop&q=60",
-  },
-  {
-    name: "Glamour VIP",
-    type: "Salón",
-    rating: "4.8",
-    reviews: 95,
-    img: "https://images.unsplash.com/photo-1521590832167-7bfc1748b565?w=500&auto=format&fit=crop&q=60",
-  },
-  {
-    name: "Fade Master",
-    type: "Barbería",
-    rating: "5.0",
-    reviews: 312,
-    img: "https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=500&auto=format&fit=crop&q=60",
-  },
-];
+interface FeaturedShop {
+  id: string;
+  name: string;
+  type: string;
+  rating: number;
+  photo: string;
+  address: string;
+}
+
+function useFeaturedShops() {
+  const [shops, setShops] = useState<FeaturedShop[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function fetchShops() {
+      try {
+        const q = query(
+          collection(db, "shops"),
+          where("isPublic", "==", true),
+          limit(6)
+        );
+        const snapshot = await getDocs(q);
+        if (cancelled) return;
+        const result: FeaturedShop[] = snapshot.docs.map((doc) => {
+          const d = doc.data();
+          return {
+            id: doc.id,
+            name: d.name || "Sin nombre",
+            type: d.type === "barberia" ? "Barbería" : "Salón",
+            rating: typeof d.rating === "number" ? d.rating : 0,
+            photo: d.photo || "",
+            address: d.address || "",
+          };
+        });
+        setShops(result);
+      } catch (err) {
+        console.error("Error fetching featured shops:", err);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+    fetchShops();
+    return () => { cancelled = true; };
+  }, []);
+
+  return { shops, loading };
+}
 
 export default function Landing() {
   const [isSheetOpen, setIsSheetOpen] = useState(false);
@@ -123,79 +151,8 @@ export default function Landing() {
           </motion.div>
         </section>
 
-        {/* Featured Professionals */}
-        <section id="descubrir" className="py-16 sm:py-20 px-4 sm:px-6 max-w-7xl mx-auto">
-          <div className="flex flex-col sm:flex-row items-end justify-between mb-10 sm:mb-12 gap-6">
-            <div>
-              <h2 className="text-2xl sm:text-3xl md:text-4xl font-black uppercase tracking-tight mb-2">
-                Destacados esta semana
-              </h2>
-              <p className="text-zinc-400 font-medium text-sm sm:text-base">
-                Los profesionales más valorados por nuestra comunidad.
-              </p>
-            </div>
-            <button
-              onClick={() => setIsSheetOpen(true)}
-              className="text-xs font-bold uppercase tracking-widest hover:text-zinc-300 flex items-center gap-2 cursor-pointer bg-transparent border-none text-white"
-            >
-              Ver Todos <ArrowRight className="w-4 h-4" />
-            </button>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-            {FEATURED_SPOTS.map((spot, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1 }}
-                className="group relative rounded-[2rem] bg-zinc-900 border border-zinc-800 overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.25)] hover:-translate-y-1 hover:shadow-[0_20px_50px_rgb(0,0,0,0.4)] hover:border-zinc-700 transition-all duration-500 cursor-pointer"
-              >
-                <div className="h-52 overflow-hidden relative">
-                  <img
-                    src={spot.img}
-                    alt={spot.name}
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                  />
-                  {/* Gradient overlay for readability */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-zinc-900/80 via-transparent to-transparent" />
-                  <div className="absolute top-4 right-4 bg-zinc-900/80 px-3 py-1.5 rounded-2xl flex items-center gap-1.5 border border-zinc-700">
-                    <Star className="w-3.5 h-3.5 text-barber-gold fill-current" />
-                    <span className="text-xs font-black">{spot.rating}</span>
-                  </div>
-                </div>
-                <div className="p-6">
-                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500 mb-2">
-                    {spot.type}
-                  </p>
-                  <h3 className="text-xl font-black mb-1 text-white">
-                    {spot.name}
-                  </h3>
-                  <p className="text-xs text-zinc-500 font-medium mb-4">
-                    {spot.reviews} reseñas verificadas
-                  </p>
-                  <div className="flex items-center justify-between pt-4 border-t border-zinc-800">
-                    <div className="flex gap-0.5">
-                      {[...Array(5)].map((_, j) => (
-                        <Star
-                          key={j}
-                          className="w-3 h-3 fill-barber-gold text-barber-gold"
-                        />
-                      ))}
-                    </div>
-                    <button
-                      onClick={() => setIsSheetOpen(true)}
-                      className="px-5 py-2 bg-white text-black rounded-full text-xs font-black uppercase tracking-widest hover:bg-zinc-200 transition-colors cursor-pointer shadow-lg shadow-white/5"
-                    >
-                      Reservar
-                    </button>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </section>
+        {/* Featured Professionals — real data from Firestore */}
+        <FeaturedSection onLoginOpen={() => setIsSheetOpen(true)} />
 
         {/* How it works for clients */}
         <section className="py-16 sm:py-20 px-4 sm:px-6 bg-white/5 border-y border-white/10">
@@ -325,6 +282,151 @@ export default function Landing() {
         onClose={() => setIsSheetOpen(false)}
       />
     </>
+  );
+}
+
+function ShopCardSkeleton() {
+  return (
+    <div className="rounded-[2rem] bg-zinc-900 border border-zinc-800 overflow-hidden">
+      <div className="h-52 bg-zinc-800 animate-pulse" />
+      <div className="p-6 space-y-3">
+        <div className="h-3 w-16 bg-zinc-800 rounded animate-pulse" />
+        <div className="h-5 w-3/4 bg-zinc-800 rounded animate-pulse" />
+        <div className="h-3 w-1/2 bg-zinc-700 rounded animate-pulse" />
+        <div className="flex items-center justify-between pt-4 border-t border-zinc-800">
+          <div className="h-3 w-20 bg-zinc-800 rounded animate-pulse" />
+          <div className="h-8 w-24 bg-zinc-800 rounded-full animate-pulse" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function FeaturedSection({ onLoginOpen }: { onLoginOpen: () => void }) {
+  const { shops, loading } = useFeaturedShops();
+
+  return (
+    <section id="descubrir" className="py-16 sm:py-20 px-4 sm:px-6 max-w-7xl mx-auto">
+      <div className="flex flex-col sm:flex-row items-end justify-between mb-10 sm:mb-12 gap-6">
+        <div>
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-black uppercase tracking-tight mb-2">
+            Destacados esta semana
+          </h2>
+          <p className="text-zinc-400 font-medium text-sm sm:text-base">
+            Los profesionales más valorados por nuestra comunidad.
+          </p>
+        </div>
+        <button
+          onClick={onLoginOpen}
+          className="text-xs font-bold uppercase tracking-widest hover:text-zinc-300 flex items-center gap-2 cursor-pointer bg-transparent border-none text-white"
+        >
+          Ver Todos <ArrowRight className="w-4 h-4" />
+        </button>
+      </div>
+
+      {/* Skeleton while loading */}
+      {loading && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+          {[0, 1, 2].map((i) => (
+            <ShopCardSkeleton key={i} />
+          ))}
+        </div>
+      )}
+
+      {/* Empty state — no public businesses yet */}
+      {!loading && shops.length === 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex flex-col items-center justify-center py-20 text-center"
+        >
+          <div className="w-20 h-20 rounded-full bg-zinc-800 border border-zinc-700 flex items-center justify-center mb-6">
+            <Store className="w-9 h-9 text-zinc-500" />
+          </div>
+          <h3 className="text-xl font-black text-white mb-2 uppercase tracking-tight">
+            Aún no hay negocios publicados
+          </h3>
+          <p className="text-zinc-500 text-sm font-medium max-w-xs">
+            Sé el primero en unirte a Staylook y hacer crecer tu negocio.
+          </p>
+          <button
+            onClick={onLoginOpen}
+            className="mt-6 px-7 py-3 bg-white text-black text-xs font-black uppercase tracking-widest rounded-full hover:scale-105 transition-transform"
+          >
+            Afiliar mi negocio
+          </button>
+        </motion.div>
+      )}
+
+      {/* Real shop cards */}
+      {!loading && shops.length > 0 && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+          {shops.map((shop, i) => (
+            <motion.div
+              key={shop.id}
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.1 }}
+              className="group relative rounded-[2rem] bg-zinc-900 border border-zinc-800 overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.25)] hover:-translate-y-1 hover:shadow-[0_20px_50px_rgb(0,0,0,0.4)] hover:border-zinc-700 transition-all duration-500 cursor-pointer"
+            >
+              <div className="h-52 overflow-hidden relative bg-zinc-800">
+                {shop.photo ? (
+                  <img
+                    src={shop.photo}
+                    alt={shop.name}
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <Scissors className="w-12 h-12 text-zinc-600" />
+                  </div>
+                )}
+                <div className="absolute inset-0 bg-gradient-to-t from-zinc-900/80 via-transparent to-transparent" />
+                {shop.rating > 0 && (
+                  <div className="absolute top-4 right-4 bg-zinc-900/80 px-3 py-1.5 rounded-2xl flex items-center gap-1.5 border border-zinc-700">
+                    <Star className="w-3.5 h-3.5 text-barber-gold fill-current" />
+                    <span className="text-xs font-black">{shop.rating.toFixed(1)}</span>
+                  </div>
+                )}
+              </div>
+              <div className="p-6">
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500 mb-2">
+                  {shop.type}
+                </p>
+                <h3 className="text-xl font-black mb-1 text-white">{shop.name}</h3>
+                {shop.address && (
+                  <p className="text-xs text-zinc-500 font-medium flex items-center gap-1 mb-4">
+                    <MapPin className="w-3 h-3 shrink-0" />
+                    <span className="truncate">{shop.address}</span>
+                  </p>
+                )}
+                <div className="flex items-center justify-between pt-4 border-t border-zinc-800">
+                  <div className="flex gap-0.5">
+                    {[...Array(5)].map((_, j) => (
+                      <Star
+                        key={j}
+                        className={`w-3 h-3 ${
+                          j < Math.round(shop.rating)
+                            ? "fill-barber-gold text-barber-gold"
+                            : "text-zinc-700 fill-zinc-700"
+                        }`}
+                      />
+                    ))}
+                  </div>
+                  <button
+                    onClick={onLoginOpen}
+                    className="px-5 py-2 bg-white text-black rounded-full text-xs font-black uppercase tracking-widest hover:bg-zinc-200 transition-colors cursor-pointer shadow-lg shadow-white/5"
+                  >
+                    Reservar
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      )}
+    </section>
   );
 }
 
