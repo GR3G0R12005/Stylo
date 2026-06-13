@@ -18,6 +18,10 @@ export interface OwnerTheme {
   badge: string;
   badgeText: string;
   inputBg: string;
+  /** Diffuse corner glow color for dashboard backgrounds (rgba) */
+  glowColor: string;
+  /** Subtle row alternation background for tables / list items */
+  rowAlt: string;
 }
 
 export interface PaletteDef {
@@ -62,6 +66,12 @@ export function getTheme(role: OwnerRole, paletteId?: string): OwnerTheme {
       badge: pal.badge,
       badgeText: pal.accent,
       inputBg: 'rgba(255,255,255,0.06)',
+      glowColor: pal.id === 'gold'
+        ? 'rgba(212,175,55,0.07)'
+        : pal.id === 'steel'
+        ? 'rgba(96,165,250,0.07)'
+        : 'rgba(52,211,153,0.07)',
+      rowAlt: 'rgba(255,255,255,0.025)',
     };
   } else {
     const pal = SALON_PALETTES.find(p => p.id === paletteId) || SALON_PALETTES[0];
@@ -87,6 +97,12 @@ export function getTheme(role: OwnerRole, paletteId?: string): OwnerTheme {
       badge: pal.badge,
       badgeText: pal.accent,
       inputBg: isRose ? '#FFF5F8' : isLav ? '#FAF5FF' : '#F0FDFA',
+      glowColor: isRose
+        ? 'rgba(236,72,153,0.06)'
+        : isLav
+        ? 'rgba(139,92,246,0.06)'
+        : 'rgba(20,184,166,0.06)',
+      rowAlt: isRose ? 'rgba(236,72,153,0.03)' : isLav ? 'rgba(139,92,246,0.03)' : 'rgba(20,184,166,0.03)',
     };
   }
 }

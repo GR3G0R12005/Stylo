@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAuth } from '../../context/AuthContext';
 import { db, handleFirestoreError, OperationType, auth } from '../../lib/firebase';
-import { collection, getDocs, query, addDoc, serverTimestamp, where, orderBy } from 'firebase/firestore';
+import { collection, getDocs, query, addDoc, serverTimestamp, where, orderBy, onSnapshot } from 'firebase/firestore';
 import { Search, Calendar, Clock, MapPin, Star, User, LogOut, CheckCircle2, ChevronRight, X, ArrowLeft, MessageSquare, Bell, SlidersHorizontal, DollarSign, Moon, Sun, Phone } from 'lucide-react';
 import { cn, formatCurrency } from '../../lib/utils';
 import { format } from 'date-fns';
@@ -49,6 +49,7 @@ export default function ClienteHome() {
   });
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState<'home' | 'appointments'>('home');
+  const [timeTab, setTimeTab] = useState<'mañana' | 'tarde' | 'noche'>('mañana');
 
   useEffect(() => {
     if (isDarkMode) {
@@ -64,7 +65,30 @@ export default function ClienteHome() {
   }, [isDarkMode]);
 
   useEffect(() => {
-    fetchShops();
+    const shopsPath = 'shops';
+    const q = query(collection(db, shopsPath));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Shop));
+      if (data.length > 0) {
+        setShops(data);
+      } else {
+        const mockShops: Shop[] = [
+          { id: '1', name: 'The Royal Barber', type: 'barberia', address: 'Calle Mayor 12', phone: '+1 829-456-7890', rating: 4.9, description: 'Estilo clásico y moderno para el caballero exigente.', photo: 'https://images.unsplash.com/photo-1503951914875-452162b0f3f1?auto=format&fit=crop&q=80&w=800', priceRange: 2, categories: ['Corte', 'Barba'] },
+          { id: '2', name: 'Aura Beauty Studio', type: 'salon', address: 'Av. Libertad 45', phone: '+1 809-123-4567', rating: 4.8, description: 'Especialistas en color, estilismo y cuidado capilar avanzado.', photo: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&q=80&w=800', priceRange: 3, categories: ['Color', 'Tratamiento', 'Corte'] },
+          { id: '3', name: 'Gents Garage', type: 'barberia', address: 'Calle Silencio 5', phone: '+1 829-987-6543', rating: 4.7, description: 'Barra libre, buena música y el mejor fade de la ciudad.', photo: 'https://images.unsplash.com/photo-1585747860715-2ba37e788b70?auto=format&fit=crop&q=80&w=800', priceRange: 1, categories: ['Corte', 'Facial'] }
+        ];
+        setShops(mockShops);
+      }
+      setLoading(false);
+    }, (err) => {
+      console.error("Home: Error al escuchar tiendas en tiempo real", err);
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  useEffect(() => {
     fetchAppointments();
     
     // Welcome message simulation
@@ -75,30 +99,6 @@ export default function ClienteHome() {
       });
     }
   }, [profile?.nombre]);
-
-  const fetchShops = async () => {
-    const shopsPath = 'shops';
-    try {
-      const q = query(collection(db, shopsPath));
-      const snapshot = await getDocs(q);
-      const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Shop));
-      
-      if (data.length === 0) {
-        const mockShops: Shop[] = [
-          { id: '1', name: 'The Royal Barber', type: 'barberia', address: 'Calle Mayor 12', phone: '+1 829-456-7890', rating: 4.9, description: 'Estilo clásico y moderno para el caballero exigente.', photo: 'https://images.unsplash.com/photo-1503951914875-452162b0f3f1?auto=format&fit=crop&q=80&w=800', priceRange: 2, categories: ['Corte', 'Barba'] },
-          { id: '2', name: 'Aura Beauty Studio', type: 'salon', address: 'Av. Libertad 45', phone: '+1 809-123-4567', rating: 4.8, description: 'Especialistas en color, estilismo y cuidado capilar avanzado.', photo: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&q=80&w=800', priceRange: 3, categories: ['Color', 'Tratamiento', 'Corte'] },
-          { id: '3', name: 'Gents Garage', type: 'barberia', address: 'Calle Silencio 5', phone: '+1 829-987-6543', rating: 4.7, description: 'Barra libre, buena música y el mejor fade de la ciudad.', photo: 'https://images.unsplash.com/photo-1585747860715-2ba37e788b70?auto=format&fit=crop&q=80&w=800', priceRange: 1, categories: ['Corte', 'Facial'] }
-        ];
-        setShops(mockShops);
-      } else {
-        setShops(data);
-      }
-      setLoading(false);
-    } catch (err) {
-      console.error("Home: Error al obtener tiendas", err);
-      setLoading(false);
-    }
-  };
 
   const filteredShops = shops.filter((shop) => {
     const q = searchQuery.toLowerCase().trim();
@@ -165,14 +165,28 @@ export default function ClienteHome() {
     }
   };
 
-  const handleSelectShop = async (shop: Shop) => {
+  const handleSelectShop = async (shop: any) => {
     setSelectedShop(shop);
-    setServices([
-      { id: '1', name: 'Corte de Pelo Premium', price: 25, duration: 45 },
-      { id: '2', name: 'Arreglo de Barba Royale', price: 15, duration: 20 },
-      { id: '3', name: 'Lavado y Peinado', price: 12, duration: 15 },
-      { id: '4', name: 'Tratamiento de Keratina', price: 65, duration: 120 },
-    ]);
+    if (shop.services && shop.services.length > 0) {
+      setServices(shop.services.filter((s: any) => s.active !== false));
+    } else {
+      // Fallback a los servicios por defecto
+      if (shop.type === 'barberia') {
+        setServices([
+          { id: '1', name: 'Fade & Barba', price: 35, duration: 45, category: 'Premium' },
+          { id: '2', name: 'Corte Clásico', price: 25, duration: 30, category: 'Básico' },
+          { id: '3', name: 'Tratamiento Capilar', price: 45, duration: 60, category: 'Tratamiento' },
+          { id: '4', name: 'Barba Royale', price: 18, duration: 20, category: 'Básico' },
+        ]);
+      } else {
+        setServices([
+          { id: '1', name: 'Color & Hidratación', price: 85, duration: 120, category: 'Color' },
+          { id: '2', name: 'Manicura Spa', price: 45, duration: 60, category: 'Uñas' },
+          { id: '3', name: 'Corte Mariposa', price: 60, duration: 45, category: 'Corte' },
+          { id: '4', name: 'Tratamiento de Keratina', price: 65, duration: 120, category: 'Tratamiento' },
+        ]);
+      }
+    }
   };
 
   const startChat = async (shop: Shop) => {
@@ -442,7 +456,22 @@ export default function ClienteHome() {
 
           {/* Shop Grid */}
           <div className="flex-1">
-            {filteredShops.length === 0 ? (
+            {/* ── Shimmer skeleton while Firestore loads (Fase 5) ──────── */}
+            {shops.length === 0 && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-8 lg:gap-10">
+                {[...Array(4)].map((_, i) => (
+                  <div key={i} className="rounded-[2.5rem] overflow-hidden border border-theme-secondary/10 shadow-sm">
+                    <div className="shimmer-loader h-64 rounded-none" style={{ animationDelay: `${i * 0.12}s` }} />
+                    <div className="p-8 space-y-3">
+                      <div className="shimmer-loader h-4 w-24 rounded-full" style={{ animationDelay: `${i * 0.12 + 0.1}s` }} />
+                      <div className="shimmer-loader h-7 w-3/4 rounded-xl" style={{ animationDelay: `${i * 0.12 + 0.2}s` }} />
+                      <div className="shimmer-loader h-4 w-1/2 rounded-full" style={{ animationDelay: `${i * 0.12 + 0.3}s` }} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+            {filteredShops.length === 0 && shops.length > 0 ? (
               <div className="text-center py-20 bg-theme-bg rounded-[3rem] border border-theme-secondary/10">
                 <div className="w-20 h-20 bg-theme-secondary/10 rounded-full flex items-center justify-center mx-auto mb-6">
                   <Search className="w-10 h-10 text-theme-text/40" />
@@ -499,7 +528,10 @@ export default function ClienteHome() {
                           </div>
                         ))}
                       </div>
-                      <h3 className="text-2xl font-black mb-2 tracking-tight text-theme-text">{shop.name}</h3>
+                      <h3 className={cn(
+                        "text-2xl font-black mb-2 tracking-tight text-theme-text",
+                        shop.type === 'salon' && "font-serif italic"
+                      )}>{shop.name}</h3>
                       <div className="flex items-center gap-2 text-theme-secondary text-sm mb-6 font-medium font-poppins">
                         <MapPin className="w-4 h-4 text-theme-primary" />
                         <span className="truncate">{shop.address}</span>
@@ -531,7 +563,7 @@ export default function ClienteHome() {
               initial={{ y: '100%', scale: 1 }}
               animate={{ y: 0, scale: 1 }}
               exit={{ y: '100%', scale: 0.9 }}
-              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              transition={{ type: 'spring', stiffness: 260, damping: 28 }}
               className="bg-theme-bg w-full max-w-2xl rounded-t-[3.5rem] sm:rounded-[3.5rem] p-10 max-h-[90vh] overflow-y-auto shadow-2xl relative text-theme-text"
             >
               <button 
@@ -570,6 +602,37 @@ export default function ClienteHome() {
                   )}
                 </div>
               </div>
+
+              {/* Promociones / Ofertas especiales del negocio */}
+              {(selectedShop as any).promos && (selectedShop as any).promos.filter((p: any) => p.status === 'active').length > 0 && (
+                <div className="mb-10 animate-in fade-in slide-in-from-bottom-2">
+                  <h4 className="text-xs font-black uppercase tracking-[0.3em] text-theme-text/60 mb-4">Ofertas Disponibles</h4>
+                  <div className="flex flex-col gap-3">
+                    {(selectedShop as any).promos.filter((p: any) => p.status === 'active').map((promo: any) => (
+                      <div 
+                        key={promo.id} 
+                        className="p-5 rounded-3xl bg-amber-500/5 dark:bg-amber-500/[0.03] border border-amber-500/20 text-theme-text flex items-center justify-between gap-4"
+                      >
+                        <div className="flex items-center gap-4">
+                          <span className="bg-amber-500 text-black text-[9px] px-2.5 py-1 rounded-xl font-black uppercase tracking-wider shrink-0 shadow-sm">
+                            OFERTA
+                          </span>
+                          <div>
+                            <p className="font-black text-base leading-tight text-zinc-900 dark:text-white">{promo.title}</p>
+                            <p className="text-xs text-theme-text/60 mt-1">Vence el {format(new Date(promo.expires), 'd MMM', { locale: es })}</p>
+                          </div>
+                        </div>
+                        <div className="text-right shrink-0">
+                          <p className="text-lg font-black text-amber-500">{promo.discount}</p>
+                          <p className="text-[10px] font-mono font-bold bg-amber-500/10 px-2 py-0.5 rounded-lg text-amber-500 inline-block mt-1">
+                            {promo.code}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* Works Carousel */}
               <div className="mb-10">
@@ -633,22 +696,77 @@ export default function ClienteHome() {
 
                   <div className="space-y-6">
                     <h4 className="text-xs font-black uppercase tracking-[0.3em] text-theme-text/60">Horarios Disponibles</h4>
-                    <div className="grid grid-cols-3 gap-4">
-                      {['09:00', '10:00', '11:00', '12:00', '13:00', '15:00', '16:00', '17:00', '18:00'].map(time => (
-                        <button
-                          key={time}
-                          onClick={() => setBookingTime(time)}
-                          className={cn(
-                            "py-5 rounded-[1.5rem] font-black text-lg transition-all border-2",
-                            bookingTime === time 
-                              ? "bg-theme-primary text-white border-theme-primary shadow-xl shadow-theme-primary/20 scale-105" 
-                              : "bg-theme-secondary/10 border-transparent hover:border-theme-secondary/30 text-theme-text hover:bg-theme-secondary/20"
-                          )}
-                        >
-                          {time}
-                        </button>
-                      ))}
-                    </div>
+
+                    {/* ── Time-of-day Tabs ────────────────────────────────── */}
+                    {(() => {
+                      // Slot definitions — unavailable slots are flagged with taken:true
+                      // to show them crossed-out (visible but non-selectable) per the design spec
+                      const allSlots: Record<'mañana' | 'tarde' | 'noche', { time: string; taken?: boolean }[]> = {
+                        mañana: [
+                          { time: '09:00' },
+                          { time: '10:00' },
+                          { time: '11:00' },
+                          { time: '12:00', taken: true },
+                        ],
+                        tarde: [
+                          { time: '13:00' },
+                          { time: '14:00', taken: true },
+                          { time: '15:00' },
+                          { time: '16:00' },
+                        ],
+                        noche: [
+                          { time: '17:00' },
+                          { time: '18:00', taken: true },
+                          { time: '19:00' },
+                          { time: '20:00' },
+                        ],
+                      };
+                      const tabLabels: ('mañana' | 'tarde' | 'noche')[] = ['mañana', 'tarde', 'noche'];
+                      const tabIcons: Record<string, string> = { mañana: '🌤', tarde: '🌇', noche: '🌙' };
+                      return (
+                        <>
+                          {/* Tab pills */}
+                          <div className="flex gap-2 p-1 bg-theme-secondary/10 rounded-2xl">
+                            {tabLabels.map(tab => (
+                              <button
+                                key={tab}
+                                onClick={() => setTimeTab(tab)}
+                                className={cn(
+                                  'flex-1 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all capitalize flex items-center justify-center gap-1.5',
+                                  timeTab === tab
+                                    ? 'bg-white dark:bg-zinc-800 shadow-sm text-theme-primary'
+                                    : 'text-theme-text/60 hover:text-theme-text',
+                                )}
+                              >
+                                <span>{tabIcons[tab]}</span>
+                                <span className="hidden sm:inline">{tab}</span>
+                              </button>
+                            ))}
+                          </div>
+
+                          {/* Slot grid */}
+                          <div className="grid grid-cols-4 gap-3">
+                            {allSlots[timeTab].map(({ time, taken }) => (
+                              <button
+                                key={time}
+                                onClick={() => !taken && setBookingTime(time)}
+                                disabled={taken}
+                                className={cn(
+                                  'py-4 rounded-[1.2rem] font-black text-base transition-all border-2',
+                                  taken
+                                    ? 'opacity-30 cursor-not-allowed border-transparent bg-theme-secondary/10 text-theme-text line-through decoration-2'
+                                    : bookingTime === time
+                                    ? 'bg-theme-primary text-white border-theme-primary shadow-xl shadow-theme-primary/20 scale-105'
+                                    : 'bg-theme-secondary/10 border-transparent hover:border-theme-secondary/30 text-theme-text hover:bg-theme-secondary/20',
+                                )}
+                              >
+                                {time}
+                              </button>
+                            ))}
+                          </div>
+                        </>
+                      );
+                    })()}
 
                     <button
                       disabled={!bookingTime}

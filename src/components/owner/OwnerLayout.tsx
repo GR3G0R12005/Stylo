@@ -141,7 +141,10 @@ export default function OwnerLayout({ role }: Props) {
               style={{
                 background: isActive ? t.accent : 'transparent',
                 color: isActive ? '#fff' : t.textMuted,
-              }}>
+              }}
+              onMouseEnter={e => { if (!isActive) (e.currentTarget as HTMLButtonElement).style.background = t.rowAlt; }}
+              onMouseLeave={e => { if (!isActive) (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; }}
+            >
               <item.icon size={18} />
               <span className="text-sm font-bold flex-1 text-left">{item.label}</span>
               {item.badgeKey && navBadges[item.badgeKey] > 0 && !isActive && (
@@ -191,7 +194,7 @@ export default function OwnerLayout({ role }: Props) {
               style={{ background:'rgba(0,0,0,0.6)', backdropFilter:'blur(4px)' }}
               onClick={() => setSidebar(false)} />
             <motion.aside initial={{ x:'-100%' }} animate={{ x:0 }} exit={{ x:'-100%' }}
-              transition={{ type:'spring', damping:25, stiffness:200 }}
+              transition={{ type:'spring', stiffness: 260, damping: 28 }}
               className="fixed left-0 top-0 h-screen w-72 z-40 p-5 flex flex-col lg:hidden"
               style={{ background: t.sidebar, borderRight:`1px solid ${t.sidebarBorder}` }}>
               <button onClick={() => setSidebar(false)} className="absolute top-4 right-4 p-2 rounded-xl"
@@ -205,7 +208,14 @@ export default function OwnerLayout({ role }: Props) {
       </AnimatePresence>
 
       {/* Main content */}
-      <div className="flex-1 lg:ml-64 flex flex-col min-h-screen">
+      <div className="flex-1 lg:ml-64 flex flex-col min-h-screen relative overflow-hidden">
+        {/* ── Diffuse Glow Corners (Fase 4) ──────────────────────── */}
+        <div className="pointer-events-none fixed inset-0 lg:left-64 z-0" aria-hidden>
+          <div className="absolute top-0 right-0 w-[500px] h-[500px] rounded-full blur-[120px] opacity-100"
+            style={{ background: t.glowColor }} />
+          <div className="absolute bottom-0 left-0 w-[400px] h-[400px] rounded-full blur-[100px] opacity-100"
+            style={{ background: t.glowColor }} />
+        </div>
         {/* Top bar */}
         <header className="sticky top-0 z-10 flex items-center justify-between px-6 py-4"
           style={{ background: t.headerBg, borderBottom: `1px solid ${t.border}`, backdropFilter:'blur(12px)' }}>
@@ -273,12 +283,13 @@ export default function OwnerLayout({ role }: Props) {
           </div>
         </header>
 
-        {/* Page content */}
-        <main className="flex-1 p-6 lg:p-10">
+        {/* ── Page content — Agenda-first asymmetric layout (Fase 4) ──── */}
+        <main className="flex-1 p-6 lg:p-10 relative z-10">
           <AnimatePresence mode="wait">
             <motion.div key={active}
               initial={{ opacity:0, y:12 }} animate={{ opacity:1, y:0 }}
-              exit={{ opacity:0, y:-8 }} transition={{ duration:0.2 }}>
+              exit={{ opacity:0, y:-8 }}
+              transition={{ type: 'spring', stiffness: 260, damping: 28 }}>
               {renderSection()}
             </motion.div>
           </AnimatePresence>

@@ -142,3 +142,71 @@ nav, button, [role="button"] {
   user-select: none;
   -webkit-user-select: none;
 }
+
+/* ── Theme Transition Propagation ────────────────────────────────────────── */
+/* Ensures ALL elements animate smoothly when data-theme attribute changes    */
+@layer base {
+  *:not([class*="transition"]):not(button) {
+    transition-property: background-color, color, border-color, fill, stroke;
+    transition-duration: 500ms;
+    transition-timing-function: ease;
+  }
+}
+
+/* ── Premium Shimmer Skeleton ─────────────────────────────────────────────── */
+@keyframes shimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position:  200% center; }
+}
+
+.shimmer-loader {
+  background: linear-gradient(
+    105deg,
+    var(--shimmer-base, #e4e4e7) 40%,
+    var(--shimmer-highlight, #f4f4f5) 50%,
+    var(--shimmer-base, #e4e4e7) 60%
+  );
+  background-size: 200% auto;
+  animation: shimmer 1.6s ease-in-out infinite;
+  border-radius: 0.75rem;
+}
+
+.dark .shimmer-loader {
+  --shimmer-base: #27272a;
+  --shimmer-highlight: #3f3f46;
+}
+
+/* ── Design System — Clases Utilitarias Globales ─────────────────────────── */
+
+/* Content cards: solid bg, subtle border, premium shadow — NO glassmorphism  */
+.card-premium {
+  @apply relative rounded-3xl border border-zinc-100 bg-white p-6
+         shadow-[0_8px_30px_rgb(0,0,0,0.015)]
+         transition-all duration-500
+         hover:-translate-y-1
+         hover:shadow-[0_20px_40px_rgb(0,0,0,0.05)]
+         dark:border-zinc-800 dark:bg-zinc-900;
+}
+
+/* Structural glass: ONLY for fixed navbars, bottom bars, modal backdrops     */
+.glass-structural {
+  @apply backdrop-blur-xl bg-white/75 border-b border-zinc-200/50
+         dark:bg-zinc-950/80 dark:border-zinc-800/50;
+}
+
+/* Luxury button — Linear / Apple style                                       */
+.btn-luxury {
+  @apply relative overflow-hidden rounded-2xl
+         bg-gradient-to-b from-zinc-800 to-black
+         px-6 py-4 text-center text-xs font-black
+         uppercase tracking-widest text-white
+         shadow-lg shadow-black/10
+         transition-all duration-300 active:scale-[0.97]
+         dark:from-white dark:to-zinc-100 dark:text-black dark:shadow-white/10;
+}
+
+/* Scrollbar thumb respects active theme secondary color                      */
+::-webkit-scrollbar-thumb {
+  background-color: color-mix(in srgb, var(--theme-secondary) 40%, transparent);
+  border-radius: 9999px;
+}

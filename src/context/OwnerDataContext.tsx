@@ -20,6 +20,9 @@ import {
   type SlotMap,
 } from '../data/ownerSeed';
 import { useToast } from '../components/owner/ui/Toast';
+import { auth, db } from '../lib/firebase';
+import { doc, setDoc, getDoc } from 'firebase/firestore';
+import { onAuthStateChanged } from 'firebase/auth';
 
 interface OwnerDataContextValue extends OwnerState {
   role: OwnerRole;
@@ -85,6 +88,74 @@ export function OwnerDataProvider({
   const [state, setState] = useState<OwnerState>(() => loadState(storageKey, role));
   const today = dateStr(new Date());
 
+  // Auxiliar para sincronizar datos del negocio en Firestore
+  const syncShopToFirestore = useCallback(async (
+    newSettings: OwnerSettings,
+    newServices: OwnerService[],
+    newPromos: OwnerPromo[]
+  ) => {
+    if (!auth.currentUser) return;
+    try {
+      const shopRef = doc(db, 'shops', auth.currentUser.uid);
+      await setDoc(shopRef, {
+        name: newSettings.shopName,
+        address: newSettings.address,
+        description: newSettings.bio || '',
+        bio: newSettings.bio || '',
+        phone: newSettings.telefono || '',
+        photo: newSettings.profileImage || `https://ui-avatars.com/api/?name=${encodeURIComponent(newSettings.shopName)}&background=random`,
+        coverImage: newSettings.coverImage || '',
+        type: role === 'barbero' ? 'barberia' : 'salon',
+        priceRange: 2,
+        categories: Array.from(new Set(newServices.filter(s => s.active).map(s => s.category))),
+        settings: newSettings,
+        services: newServices,
+        promos: newPromos,
+      }, { merge: true });
+    } catch (err) {
+      console.error("Error syncing shop to Firestore:", err);
+    }
+  }, [role]);
+
+  // Cargar datos reales desde Firestore al iniciar sesión
+  useEffect(() => {
+    const fetchFirestoreShop = async () => {
+      if (!auth.currentUser) return;
+      try {
+        const docRef = doc(db, 'shops', auth.currentUser.uid);
+        const snapshot = await getDoc(docRef);
+        if (snapshot.exists()) {
+          const data = snapshot.data();
+          setState((prev) => ({
+            ...prev,
+            services: data.services || prev.services,
+            promos: data.promos || prev.promos,
+            settings: {
+              ...prev.settings,
+              ...(data.settings || {}),
+              shopName: data.name || prev.settings.shopName,
+              address: data.address || prev.settings.address,
+              bio: data.bio || prev.settings.bio,
+              profileImage: data.photo || prev.settings.profileImage,
+              coverImage: data.coverImage || prev.settings.coverImage,
+              telefono: data.phone || prev.settings.telefono,
+            }
+          }));
+        }
+      } catch (err) {
+        console.error("Error loading shop from Firestore:", err);
+      }
+    };
+
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        fetchFirestoreShop();
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
+
   useEffect(() => {
     localStorage.setItem(storageKey, JSON.stringify(state));
   }, [state, storageKey]);
@@ -146,29 +217,35 @@ export function OwnerDataProvider({
   }, [toast]);
 
   const addService = useCallback((service: Omit<OwnerService, 'id' | 'active'>) => {
-    setState((prev) => ({
-      ...prev,
-      services: [...prev.services, { ...service, id: `sv-${Date.now()}`, active: true }],
-    }));
+    setState((prev) => {
+      const nextServices = [...prev.services, { ...service, id: `sv-${Date.now()}`, active: true }];
+      const next = { ...prev, services: nextServices };
+      syncShopToFirestore(next.settings, next.services, next.promos);
+      return next;
+    });
     toast('Servicio añadido al catálogo');
-  }, [toast]);
+  }, [toast, syncShopToFirestore]);
 
   const updateService = useCallback((id: string, patch: Partial<OwnerService>) => {
-    setState((prev) => ({
-      ...prev,
-      services: prev.services.map((s) => (s.id === id ? { ...s, ...patch } : s)),
-    }));
+    setState((prev) => {
+      const nextServices = prev.services.map((s) => (s.id === id ? { ...s, ...patch } : s));
+      const next = { ...prev, services: nextServices };
+      syncShopToFirestore(next.settings, next.services, next.promos);
+      return next;
+    });
     toast('Servicio actualizado');
-  }, [toast]);
+  }, [toast, syncShopToFirestore]);
 
   const toggleServiceActive = useCallback((id: string) => {
-    setState((prev) => ({
-      ...prev,
-      services: prev.services.map((s) =>
+    setState((prev) => {
+      const nextServices = prev.services.map((s) =>
         s.id === id ? { ...s, active: !s.active } : s,
-      ),
-    }));
-  }, []);
+      );
+      const next = { ...prev, services: nextServices };
+      syncShopToFirestore(next.settings, next.services, next.promos);
+      return next;
+    });
+  }, [syncShopToFirestore]);
 
   const addEmployee = useCallback(
     (employee: Omit<OwnerEmployee, 'id' | 'avatar' | 'todayCitas' | 'rating' | 'since' | 'active'> & { name: string }) => {
@@ -212,23 +289,27 @@ export function OwnerDataProvider({
 
   const addPromo = useCallback((promo: Omit<OwnerPromo, 'id' | 'uses' | 'status'>) => {
     const status = promoStatus(promo.expires);
-    setState((prev) => ({
-      ...prev,
-      promos: [
+    setState((prev) => {
+      const nextPromos = [
         { ...promo, id: `pr-${Date.now()}`, uses: 0, status },
         ...prev.promos,
-      ],
-    }));
+      ];
+      const next = { ...prev, promos: nextPromos };
+      syncShopToFirestore(next.settings, next.services, next.promos);
+      return next;
+    });
     toast('Promoción creada');
-  }, [toast]);
+  }, [toast, syncShopToFirestore]);
 
   const deletePromo = useCallback((id: string) => {
-    setState((prev) => ({
-      ...prev,
-      promos: prev.promos.filter((p) => p.id !== id),
-    }));
+    setState((prev) => {
+      const nextPromos = prev.promos.filter((p) => p.id !== id);
+      const next = { ...prev, promos: nextPromos };
+      syncShopToFirestore(next.settings, next.services, next.promos);
+      return next;
+    });
     toast('Promoción eliminada', 'info');
-  }, [toast]);
+  }, [toast, syncShopToFirestore]);
 
   const replyReview = useCallback((id: string, reply: string) => {
     setState((prev) => ({
@@ -247,9 +328,13 @@ export function OwnerDataProvider({
   }, [toast]);
 
   const saveSettings = useCallback((settings: OwnerSettings) => {
-    setState((prev) => ({ ...prev, settings }));
+    setState((prev) => {
+      const next = { ...prev, settings };
+      syncShopToFirestore(next.settings, next.services, next.promos);
+      return next;
+    });
     toast('Configuración guardada');
-  }, [toast]);
+  }, [toast, syncShopToFirestore]);
 
   const setBlockedSlots = useCallback((blockedSlots: SlotMap) => {
     setState((prev) => ({ ...prev, blockedSlots }));
